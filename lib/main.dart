@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OceanDemo',
+      title: 'Oceandemo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: 'Montserrat',
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'OceanDemo',
+          'Oceandemo',
           style: TextStyle(
             fontFamily: 'Montserrat',
             fontSize: 20.0,
