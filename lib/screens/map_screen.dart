@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:latlong2/latlong.dart';
+import '../platform_model.dart'; // Ensure your PlatformModel is imported
 
 class MapScreen extends StatefulWidget {
   @override
@@ -11,11 +13,18 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   LatLng? _currentLocation;
   bool _isLoading = true;
+  late Box<PlatformModel> _platformBox;
 
   @override
   void initState() {
     super.initState();
+    _initializePlatformData();
     _getCurrentLocation();
+  }
+
+  Future<void> _initializePlatformData() async {
+    _platformBox = await Hive.openBox<PlatformModel>('platforms');
+    setState(() {});
   }
 
   Future<void> _getCurrentLocation() async {
@@ -25,7 +34,6 @@ class _MapScreenState extends State<MapScreen> {
     // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled
       await Geolocator.openLocationSettings();
       return;
     }
@@ -35,13 +43,11 @@ class _MapScreenState extends State<MapScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Permissions are denied
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // Permissions are permanently denied
       return;
     }
 
@@ -56,12 +62,11 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text('Map')),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator()) // Show loader while location is being fetched
+          ? Center(child: CircularProgressIndicator())
           : FlutterMap(
               options: MapOptions(
-                center: _currentLocation,
+                center: _currentLocation ?? LatLng(10.0, 20.0),
                 zoom: 4.0,
               ),
               children: [
@@ -69,9 +74,9 @@ class _MapScreenState extends State<MapScreen> {
                   urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
                   subdomains: ['a', 'b', 'c'],
                 ),
-                if (_currentLocation != null)
-                  MarkerLayer(
-                    markers: [
+                MarkerLayer(
+                  markers: [
+                    if (_currentLocation != null)
                       Marker(
                         point: _currentLocation!,
                         builder: (ctx) => Icon(
@@ -80,10 +85,25 @@ class _MapScreenState extends State<MapScreen> {
                           size: 40.0,
                         ),
                       ),
-                    ],
-                  ),
+                    ..._platformMarkers(),
+                  ],
+                ),
               ],
             ),
     );
+  }
+
+  List<Marker> _platformMarkers() {
+    if (_platformBox.isEmpty) return [];
+    return _platformBox.values.map((platform) {
+      return Marker(
+        point: LatLng(platform.latitude, platform.longitude),
+        builder: (ctx) => Icon(
+          Icons.circle,
+          color: Colors.blue,
+          size: 10.0,
+        ),
+      );
+    }).toList();
   }
 }

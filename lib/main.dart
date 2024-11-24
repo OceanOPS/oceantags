@@ -3,8 +3,13 @@ import 'screens/map_screen.dart';
 import 'screens/qr_scan_screen.dart';
 import 'screens/data_screen.dart';
 import 'screens/photos_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'platform_model.dart'; 
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter(); // Initialize Hive
+  Hive.registerAdapter(PlatformModelAdapter());
   runApp(MyApp());
 }
 
