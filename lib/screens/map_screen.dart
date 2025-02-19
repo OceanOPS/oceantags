@@ -8,6 +8,7 @@ import 'dart:async';
 import '../platform_model.dart';
 import 'dart:math';
 import 'dart:ui' as ui; // Explicitly import dart:ui for drawing paths
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -202,7 +203,7 @@ String _getNetworkImage(String network) {
 
     double zoomLevel = 9.0; // Default zoom in case _mapController isn't ready
     try {
-      zoomLevel = _mapController.zoom; // ✅ Get the current zoom level
+      zoomLevel = _mapController.camera.zoom; // ✅ Get the current zoom level
     } catch (e) {
       print("⚠️ _mapController.zoom not ready yet: $e");
     }
@@ -214,7 +215,7 @@ String _getNetworkImage(String network) {
         width: showHighlighted ? 80 : 16,
         height: showHighlighted ? 100 : 16,
         point: LatLng(platform.latitude, platform.longitude),
-        builder: (ctx) => GestureDetector(
+        child: GestureDetector(
           onTap: () {
             print("🟢 Clicked Platform: ${platform.reference}");
             setState(() {
@@ -253,17 +254,18 @@ String _getNetworkImage(String network) {
   Marker? _selectedMarker() {
     if (_selectedPlatform == null) return null;
 
-    return Marker(
-      width: 50,
-      height: 50,
-      point: LatLng(_selectedPlatform!.latitude, _selectedPlatform!.longitude),
-      builder: (ctx) => Stack(
-        alignment: Alignment.center,
-        children: [
-          _pulsingSelectedMarker(), // ✅ Pulsing blue effect
-        ],
-      ),
-    );
+  return Marker(
+    width: 50,
+    height: 50,
+    point: LatLng(_selectedPlatform!.latitude, _selectedPlatform!.longitude),
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        _pulsingSelectedMarker(), // ✅ Pulsing blue effect
+      ],
+    ),
+  );
+
   }
 
   /// ✅ User's current location (pink 3D pin)
@@ -274,7 +276,7 @@ String _getNetworkImage(String network) {
       width: 50,
       height: 80, // Adjusted height for pin + line
       point: _currentLocation!,
-      builder: (ctx) => Column(
+      child: Column(
         children: [
           // 🎯 Round Pink Sphere with Reflection Effect
           Container(
@@ -438,6 +440,10 @@ void _resetToNorth() {
   _mapController.rotate(0); // Reset rotation to 0 degrees (north)
 }
 
+  final _tileProvider = FMTCTileProvider(
+    stores: const {'mapStore': BrowseStoreStrategy.readUpdateCreate},
+    loadingStrategy: BrowseLoadingStrategy.cacheFirst,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -452,12 +458,13 @@ void _resetToNorth() {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    center: _currentLocation ?? LatLng(10.0, 20.0),
-                    zoom: 10.0,
+                    initialCenter: _currentLocation ?? LatLng(10.0, 20.0),
+                    initialZoom: 10.0,
                   ),
                   children: [
                     // ✅ Switch Tile Layer based on Dark/Light Mode
                     TileLayer(
+                      tileProvider: _tileProvider,
                       urlTemplate: isDarkMode
                           ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' // Dark mode tile
                           : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap

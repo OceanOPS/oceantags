@@ -6,6 +6,7 @@ import 'screens/alerts_screen.dart';
 import 'screens/photos_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'platform_model.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,10 +15,21 @@ void main() async {
 
   // ✅ Load theme preference from Hive
   var box = await Hive.openBox('settings');
-  bool isDarkMode = box.get('darkMode', defaultValue: true); // Default to dark mode
+  bool isDarkMode = box.get('darkMode', defaultValue: false);
+
+  Object? initErr;
+  try {
+    // ✅ Initialize tile caching backend
+    await FMTCObjectBoxBackend().initialise();
+    final store = FMTCStore('mapStore');
+    await store.manage.create();
+  } catch (err) {
+    initErr = err;
+  }
 
   runApp(MyApp(isDarkMode: isDarkMode));
 }
+
 
 class MyApp extends StatefulWidget {
   final bool isDarkMode;
