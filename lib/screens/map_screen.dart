@@ -21,6 +21,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _isLocationLoaded = false;
   bool _isBoxInitialized = false;
   Box<PlatformModel>? _platformBox;
+  bool _downloading = false;
+  double _downloadProgress = 0.0;
+  String _downloadMessage = "";
 
   PlatformModel? _selectedPlatform;
   late final MapController _mapController;
@@ -428,17 +431,112 @@ Widget _buildBottomPanel() {
     );
   }
 
-/// 📍 Recenter map on user and zoom in
-void _recenterOnUser() {
-  if (_currentLocation != null) {
-    _mapController.move(_currentLocation!, 10); // Zoom level 10
-  }
-}
+  StreamSubscription<DownloadProgress>? _progressSubscription; // ✅ Store the subscription
 
-/// 🧭 Reset map rotation to North
-void _resetToNorth() {
-  _mapController.rotate(0); // Reset rotation to 0 degrees (north)
-}
+  void _downloadDisplayedRegion() async {
+    if (_downloading) return; // ✅ Prevent duplicate downloads
+
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark; // ✅ Detect Dark Mode
+
+    // ✅ Cancel the previous subscription before starting a new one
+    await _progressSubscription?.cancel();
+    _progressSubscription = null;
+
+    setState(() {
+      _downloading = true;
+      _downloadProgress = 0.0;
+      _downloadMessage = "Downloading displayed region at all zoom levels - 0%";
+    });
+
+    final LatLngBounds displayedBounds = _mapController.camera.visibleBounds;
+
+    final region = RectangleRegion(displayedBounds);
+
+    final downloadableRegion = region.toDownloadable(
+      minZoom: 0, // ✅ Fixed minimum zoom level
+      maxZoom: 15, // ✅ Fixed maximum zoom level
+      options: TileLayer(
+        tileProvider: _tileProvider, // ✅ Use same tile provider as displayed map
+        urlTemplate: isDarkMode
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' // Dark mode
+            : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap
+        subdomains: ['a', 'b', 'c'],
+        userAgentPackageName: 'com.example.oceantrack',
+      ),
+    );
+
+    try {
+      final downloadTask = FMTCStore('mapStore').download.startForeground(
+        region: downloadableRegion,
+        instanceId: DateTime.now().millisecondsSinceEpoch, // ✅ Unique ID for each download
+        parallelThreads: 5,
+        maxBufferLength: 200,
+        skipExistingTiles: true,
+        skipSeaTiles: true,
+        maxReportInterval: const Duration(seconds: 1),
+        retryFailedRequestTiles: true,
+      );
+
+      // ✅ Convert the stream to a broadcast stream to allow multiple listeners
+      StreamController<DownloadProgress> progressController = StreamController.broadcast();
+      downloadTask.downloadProgress.listen((event) => progressController.add(event));
+
+      Stream<DownloadProgress> downloadProgress = progressController.stream;
+
+      // ✅ Listen to progress updates, ensuring only one active listener
+      _progressSubscription = downloadProgress.listen((progress) {
+        if (progress.maxTilesCount > 0) {
+          setState(() {
+            _downloadProgress = progress.percentageProgress / 100;
+            _downloadMessage =
+                "Downloading displayed region basemap at all zoom levels - ${progress.percentageProgress.toStringAsFixed(1)}%";
+          });
+        }
+
+        if (progress.percentageProgress == 100) {
+          setState(() {
+            _downloadProgress = progress.percentageProgress / 100;
+            _downloadMessage =
+                "Displayed map region successfully saved to cache!";
+          });
+        }
+      });
+
+      await downloadProgress.last; // ✅ Wait until download completes
+      await _progressSubscription?.cancel(); // ✅ Cancel stream after completion
+      await progressController.close(); // ✅ Close the controller to prevent memory leaks
+
+      setState(() {
+        _downloading = false;
+        _downloadMessage = "";
+      });
+
+    } catch (e) {
+      setState(() {
+        _downloading = false;
+        _downloadMessage = "";
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: ${e.toString()}"),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  /// 📍 Recenter map on user and zoom in
+  void _recenterOnUser() {
+    if (_currentLocation != null) {
+      _mapController.move(_currentLocation!, 10); // Zoom level 10
+    }
+  }
+
+  /// 🧭 Reset map rotation to North
+  void _resetToNorth() {
+    _mapController.rotate(0); // Reset rotation to 0 degrees (north)
+  }
 
   final _tileProvider = FMTCTileProvider(
     stores: const {'mapStore': BrowseStoreStrategy.readUpdateCreate},
@@ -478,8 +576,46 @@ void _resetToNorth() {
                         if (_currentLocationMarker() != null) _currentLocationMarker()!,
                       ],
                     ),
+
                   ],
                 ),
+                    // ✅ Bulk Download Button (above Reset North & Recenter)
+                Positioned(
+                  bottom: 160,
+                  right: 10,
+                  child: FloatingActionButton(
+                    heroTag: "bulkDownload",
+                    mini: true,
+                    onPressed: () => _downloadDisplayedRegion(),
+                    backgroundColor: Colors.white.withOpacity(0.8),
+                    child: Icon(Icons.download),
+                  ),
+                ),
+
+                // ✅ Show Download Progress Bar
+                if (_downloading)
+                  Positioned(
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                    child: Column(
+                      children: [
+                        Text(
+                          _downloadMessage,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 8),
+                        LinearProgressIndicator(value: _downloadProgress),
+                      ],
+                    ),
+                  ),
+
+
                 // 📍 Target Button (Recenter on User Location)
                 Positioned(
                   bottom: 40, // Adjust placement
