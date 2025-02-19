@@ -20,19 +20,28 @@ class PlatformModelAdapter extends TypeAdapter<PlatformModel> {
       reference: fields[0] as String,
       latitude: fields[1] as double,
       longitude: fields[2] as double,
+      status: fields[3] as String,
+      model: fields[4] as String,
+      network: fields[5] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, PlatformModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.reference)
       ..writeByte(1)
       ..write(obj.latitude)
       ..writeByte(2)
-      ..write(obj.longitude);
+      ..write(obj.longitude)
+      ..writeByte(3)
+      ..write(obj.status)
+      ..writeByte(4)
+      ..write(obj.model)
+      ..writeByte(5)
+      ..write(obj.network);
   }
 
   @override
