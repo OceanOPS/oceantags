@@ -6,6 +6,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:latlong2/latlong.dart' as latlong;
 import 'dart:async';
 import '../platform_model.dart';
+import 'dart:math';
+import 'dart:ui' as ui; // Explicitly import dart:ui for drawing paths
+
 
 class MapScreen extends StatefulWidget {
   @override
@@ -29,6 +32,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _mapController = MapController();
     _initializePlatformData();
     _getCurrentLocation();
+
+    // ✅ Listen to zoom changes
+    _mapController.mapEventStream.listen((event) {
+      if (event is MapEventMove) {
+        setState(() {}); // 🔄 Rebuild UI when zoom changes
+      }
+    });
 
     // ✅ Animation controller for pulsing effect
     _pulseController = AnimationController(
@@ -73,8 +83,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     final position = await Geolocator.getCurrentPosition();
+    
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
+      _isLocationLoaded = true;
+    });
+
+    // override for demo !!!
+    setState(() {
+      _currentLocation = LatLng(42.7, 3.25);
       _isLocationLoaded = true;
     });
   }
@@ -93,15 +110,109 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
+  List<Widget> _buildRegularPlatformMarker(PlatformModel platform) {
+    return [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _getPlatformColor(platform.status),
+        ),
+      ),
+    ];
+  }
 
-  /// ✅ Generate platform markers with larger clickable areas
+List<Widget> _buildHighlightedPlatformMarker(PlatformModel platform) {
+  return [
+    // 🟢 Outer Colored Border (Depends on Status)
+    Container(
+      width: 54, // Slightly larger than the main container
+      height: 54,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.transparent, // Ensures only border is visible
+        border: Border.all(color: _getPlatformColor(platform.status), width: 2), // Thin colored border
+      ),
+      child: Center( // Center the main white-bordered container
+        child: Container(
+          width: 50, // Main white circular border
+          height: 50,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: Colors.white, width: 5), // Thick white border
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              _getNetworkImage(platform.network), // Dynamically select image
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      ),
+    ),
+
+    // 🔻 Short Stubby Line Below Circle (Now More Visible)
+    Positioned(
+      bottom: -14, // Adjusted position for better visibility
+      child: Container(
+        width: 3, // Thin line
+        height: 12, // Slightly longer
+        decoration: BoxDecoration(
+          color: _getPlatformColor(platform.status), // Now colored like status
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    ),
+
+    // 🎯 Platform Color Dot (Exactly on Platform Location)
+    Positioned(
+      bottom: -20, // Ensures it aligns with platform location
+      child: Container(
+        width: 12, // Small dot
+        height: 12,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _getPlatformColor(platform.status), // Platform status color
+          border: Border.all(color: Colors.white, width: 2), // Thin white border
+        ),
+      ),
+    ),
+  ];
+}
+
+
+String _getNetworkImage(String network) {
+  Map<String, String> networkImages = {
+    'argo': 'assets/images/argo.png',
+    'dbcp': 'assets/images/mooring.jpg',
+    'oceansites': 'assets/images/mooring.png',
+    'sot': 'assets/images/vos.jpg',
+    'oceangliders': 'assets/images/glider.png',
+    'anibos': 'assets/images/wave.png',
+  };
+
+  return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
+}
+
+
   List<Marker> _platformMarkers() {
     if (!_isBoxInitialized || _platformBox == null || _platformBox!.isEmpty) return [];
 
+    double zoomLevel = 9.0; // Default zoom in case _mapController isn't ready
+    try {
+      zoomLevel = _mapController.zoom; // ✅ Get the current zoom level
+    } catch (e) {
+      print("⚠️ _mapController.zoom not ready yet: $e");
+    }
+
+    bool showHighlighted = zoomLevel >= 9; // ✅ Show highlighted markers at zoom 10+
+
     return _platformBox!.values.map((platform) {
       return Marker(
-        width: 50, // Enlarged clickable area
-        height: 50,
+        width: showHighlighted ? 80 : 16,
+        height: showHighlighted ? 100 : 16,
         point: LatLng(platform.latitude, platform.longitude),
         builder: (ctx) => GestureDetector(
           onTap: () {
@@ -109,13 +220,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             setState(() {
               _selectedPlatform = platform;
             });
-
           },
           child: Stack(
             alignment: Alignment.center,
-            children: [
-              Icon(Icons.circle, color: _getPlatformColor(platform.status), size: 16.0),
-            ],
+            children: showHighlighted 
+              ? _buildHighlightedPlatformMarker(platform) 
+              : _buildRegularPlatformMarker(platform),
           ),
         ),
       );
@@ -156,17 +266,90 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// ✅ User's current location (purple pin)
+  /// ✅ User's current location (pink 3D pin)
   Marker? _currentLocationMarker() {
     if (_currentLocation == null) return null;
 
     return Marker(
       width: 50,
-      height: 50,
+      height: 80, // Adjusted height for pin + line
       point: _currentLocation!,
-      builder: (ctx) => Icon(Icons.location_on, color: Colors.purple, size: 40.0),
+      builder: (ctx) => Column(
+        children: [
+          // 🎯 Round Pink Sphere with Reflection Effect
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color.fromARGB(255, 224, 93, 145),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // ✨ Oval White Reflection (Moved to Top Left)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Container(
+                    width: 10,
+                    height: 7, // Slightly oval for realism
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.6), // Semi-transparent for reflection
+                    ),
+                  ),
+                ),
+
+                // ✨ Soft Glow Reflection
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Container(
+                    width: 16,
+                    height: 10, // Larger and diffused
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.2), // Fainter outer glow
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 📍 Thinner & Shorter Vertical Line (⅔ of sphere’s diameter)
+          Container(
+            width: 2, // Made thinner
+            height: 21, // ⅔ of 32px diameter
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 224, 93, 145),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+
+          // ⚫ Small Black Oval (3D Hole Effect)
+          Container(
+            width: 8, // Wider than tall for an oval effect
+            height: 3, // Very thin
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              color: Colors.black.withOpacity(0.7), // Slight transparency for depth effect
+              borderRadius: BorderRadius.circular(2), // Slight rounding for realism
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+
 
 Widget _buildBottomPanel() {
   if (_selectedPlatform == null) return SizedBox.shrink();
@@ -243,6 +426,19 @@ Widget _buildBottomPanel() {
     );
   }
 
+/// 📍 Recenter map on user and zoom in
+void _recenterOnUser() {
+  if (_currentLocation != null) {
+    _mapController.move(_currentLocation!, 10); // Zoom level 10
+  }
+}
+
+/// 🧭 Reset map rotation to North
+void _resetToNorth() {
+  _mapController.rotate(0); // Reset rotation to 0 degrees (north)
+}
+
+
   @override
   Widget build(BuildContext context) {
     // ✅ Determine if the app is in dark mode
@@ -257,7 +453,7 @@ Widget _buildBottomPanel() {
                   mapController: _mapController,
                   options: MapOptions(
                     center: _currentLocation ?? LatLng(10.0, 20.0),
-                    zoom: 6.0,
+                    zoom: 10.0,
                   ),
                   children: [
                     // ✅ Switch Tile Layer based on Dark/Light Mode
@@ -267,7 +463,7 @@ Widget _buildBottomPanel() {
                           : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap
                       subdomains: ['a', 'b', 'c'],
                     ),
-                    
+      
                     MarkerLayer(
                       markers: [
                         ..._platformMarkers(),
@@ -277,6 +473,32 @@ Widget _buildBottomPanel() {
                     ),
                   ],
                 ),
+                // 📍 Target Button (Recenter on User Location)
+                Positioned(
+                  bottom: 40, // Adjust placement
+                  right: 10,
+                  child: FloatingActionButton(
+                    heroTag: "btn1",
+                    mini: true,
+                    backgroundColor: Colors.white.withOpacity(0.8),
+                    onPressed: _recenterOnUser,
+                    child: Icon(Icons.my_location, color: Colors.black),
+                  ),
+                ),
+
+                // 🧭 Compass Button (Reset to North)
+                Positioned(
+                  bottom: 100,
+                  right: 10,
+                  child: FloatingActionButton(
+                    heroTag: "btn2",
+                    mini: true,
+                    backgroundColor: Colors.white.withOpacity(0.8),
+                    onPressed: _resetToNorth,
+                    child: Icon(Icons.explore, color: Colors.black), // Compass icon
+                  ),
+                )
+                ,
           _buildBottomPanel(),
         ],
       ),

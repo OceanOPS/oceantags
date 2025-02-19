@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/map_screen.dart';
 import 'screens/qr_scan_screen.dart';
 import 'screens/data_screen.dart';
+import 'screens/alerts_screen.dart';
 import 'screens/photos_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'platform_model.dart';
@@ -63,7 +64,7 @@ class _MyAppState extends State<MyApp> {
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Color.fromARGB(255, 156, 9, 201),
+          selectedItemColor: Color.fromARGB(255, 126, 58, 109),
           unselectedItemColor: Colors.black54,
         ),
       ),
@@ -79,7 +80,7 @@ class _MyAppState extends State<MyApp> {
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Color.fromARGB(255, 20, 20, 20),
-          selectedItemColor: Color.fromARGB(255, 156, 9, 201),
+          selectedItemColor: Color.fromARGB(255, 230, 100, 182),
           unselectedItemColor: Colors.white60,
         ),
       ),
@@ -105,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
     MapScreen(),
     QRScanScreen(),
     PhotosScreen(),
+    AlertsScreen(),
     DataScreen(),
   ];
 
@@ -114,59 +116,79 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(
-            widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-            color: widget.isDarkMode ? Colors.white : Colors.black,
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      leading: IconButton(
+        icon: Icon(Icons.account_circle, size: 28),
+        onPressed: () {
+          // ✅ Handle user profile action (e.g., show user details)
+          print("User profile clicked!");
+        },
+      ),
+      title: RichText(
+        text: TextSpan(
+          style: TextStyle(
+            fontFamily: 'Montserrat',
+            fontSize: 20.0,
+            color: widget.isDarkMode
+                ? Color.fromARGB(255, 209, 209, 209)
+                : Color.fromARGB(255, 77, 77, 77),
           ),
-          onPressed: widget.toggleDarkMode, // ✅ Toggle dark/light mode
-        ),
-        title: RichText(
-          text: TextSpan(
-            style: TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 20.0,
-              color: Color.fromARGB(255, 156, 9, 201),
+          children: [
+            TextSpan(
+              text: 'Ocean', // Regular text
+              style: TextStyle(fontWeight: FontWeight.normal),
             ),
-            children: [
-              TextSpan(
-                text: 'Ocean', // Regular text
-                style: TextStyle(fontWeight: FontWeight.normal),
-              ),
-              TextSpan(
-                text: 'Tags', // Bold text
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+            TextSpan(
+              text: 'Tags', // Bold text
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.account_circle, size: 28),
-            onPressed: () {
-              // ✅ Handle user profile action (e.g., show user details)
-              print("User profile clicked!");
-            },
-          ),
-        ],
       ),
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: 'Scan'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo), label: 'Photos'),
-          BottomNavigationBarItem(icon: Icon(Icons.data_usage), label: 'Data'),
-        ],
-      ),
-    );
-  }
+      centerTitle: true,
+      actions: [
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == "toggle_dark_mode") {
+              widget.toggleDarkMode(); // ✅ Toggle Dark/Light Mode
+            }
+          },
+          icon: Icon(Icons.more_vert), // Three-dot menu icon
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem(
+              value: "toggle_dark_mode",
+              child: Row(
+                children: [
+                  Icon(
+                    widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    color: widget.isDarkMode ? Colors.black : Colors.grey[700],
+                  ),
+                  SizedBox(width: 10),
+                  Text(widget.isDarkMode ? "Light Mode" : "Dark Mode"),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+    body: _screens[_selectedIndex],
+    bottomNavigationBar: BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+        BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: 'Scan'),
+        BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add'),
+        BottomNavigationBarItem(icon: Icon(Icons.notifications_none_outlined), label: 'Alerts'),
+        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+      ],
+    ),
+  );
+}
+
 }
