@@ -24,6 +24,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _downloading = false;
   double _downloadProgress = 0.0;
   String _downloadMessage = "";
+  bool _menuExpanded = false; // ✅ Toggle menu visibility
+
+  void _toggleMenu() {
+    setState(() {
+      _menuExpanded = !_menuExpanded;
+    });
+  }
 
   PlatformModel? _selectedPlatform;
   late final MapController _mapController;
@@ -129,58 +136,40 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
 List<Widget> _buildHighlightedPlatformMarker(PlatformModel platform) {
   return [
-    // 🟢 Outer Colored Border (Depends on Status)
-    Container(
-      width: 54, // Slightly larger than the main container
-      height: 54,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.transparent, // Ensures only border is visible
-        border: Border.all(color: _getPlatformColor(platform.status), width: 2), // Thin colored border
-      ),
-      child: Center( // Center the main white-bordered container
-        child: Container(
-          width: 50, // Main white circular border
-          height: 50,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            border: Border.all(color: Colors.white, width: 5), // Thick white border
+    // 📍 PNG Map Marker Positioned Correctly
+    Positioned(
+      bottom: 40, // Ensures bottom center aligns with location
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 🔹 Custom PNG Marker with Transparent Hole
+          Image.asset(
+            "assets/images/map-marker.png", // ✅ PNG marker
+            width: 50, // Adjust size to match existing design
+            height: 70,
           ),
-          child: ClipOval(
-            child: Image.asset(
-              _getNetworkImage(platform.network), // Dynamically select image
-              fit: BoxFit.cover,
+
+          // 🔹 Inner Circle for Platform Network Image
+          Positioned(
+            top: 12, // Adjusted to fit the round space
+            child: Container(
+              width: 35, // Size to fit inside the hole
+              height: 35,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white, // Background in case no image
+                border: Border.all(color: Colors.white, width: 2), // White border around image
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  _getNetworkImage(platform.network), // ✅ Platform Network Image
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    ),
 
-    // 🔻 Short Stubby Line Below Circle (Now More Visible)
-    Positioned(
-      bottom: -14, // Adjusted position for better visibility
-      child: Container(
-        width: 3, // Thin line
-        height: 12, // Slightly longer
-        decoration: BoxDecoration(
-          color: _getPlatformColor(platform.status), // Now colored like status
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    ),
-
-    // 🎯 Platform Color Dot (Exactly on Platform Location)
-    Positioned(
-      bottom: -20, // Ensures it aligns with platform location
-      child: Container(
-        width: 12, // Small dot
-        height: 12,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _getPlatformColor(platform.status), // Platform status color
-          border: Border.all(color: Colors.white, width: 2), // Thin white border
-        ),
+        ],
       ),
     ),
   ];
@@ -190,11 +179,11 @@ List<Widget> _buildHighlightedPlatformMarker(PlatformModel platform) {
 String _getNetworkImage(String network) {
   Map<String, String> networkImages = {
     'argo': 'assets/images/argo.png',
-    'dbcp': 'assets/images/mooring.jpg',
-    'oceansites': 'assets/images/mooring.png',
-    'sot': 'assets/images/vos.jpg',
+    'dbcp': 'assets/images/drifter.png',
+    'oceansites': 'assets/images/buoy.png',
+    'sot': 'assets/images/ship.png',
     'oceangliders': 'assets/images/glider.png',
-    'anibos': 'assets/images/wave.png',
+    'anibos': 'assets/images/anibos.png',
   };
 
   return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
@@ -246,7 +235,7 @@ String _getNetworkImage(String network) {
           height: _pulseController.value * 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.purple.withOpacity(0.3),
+            color:  const Color.fromARGB(255, 247, 133, 133).withOpacity(0.3),
           ),
         );
       },
@@ -287,7 +276,7 @@ String _getNetworkImage(String network) {
             height: 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color.fromARGB(255, 224, 93, 145),
+              color: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
@@ -334,7 +323,7 @@ String _getNetworkImage(String network) {
             width: 2, // Made thinner
             height: 21, // ⅔ of 32px diameter
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 224, 93, 145),
+              color: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -579,18 +568,7 @@ Widget _buildBottomPanel() {
 
                   ],
                 ),
-                    // ✅ Bulk Download Button (above Reset North & Recenter)
-                Positioned(
-                  bottom: 160,
-                  right: 10,
-                  child: FloatingActionButton(
-                    heroTag: "bulkDownload",
-                    mini: true,
-                    onPressed: () => _downloadDisplayedRegion(),
-                    backgroundColor: Colors.white.withOpacity(0.8),
-                    child: Icon(Icons.download),
-                  ),
-                ),
+           
 
                 // ✅ Show Download Progress Bar
                 if (_downloading)
@@ -615,35 +593,49 @@ Widget _buildBottomPanel() {
                     ),
                   ),
 
-
-                // 📍 Target Button (Recenter on User Location)
+                // ✅ Settings Map Button 
                 Positioned(
-                  bottom: 40, // Adjust placement
-                  right: 10,
+                  top: 16, // Adjust base position
+                  right: 14,
                   child: FloatingActionButton(
-                    heroTag: "btn1",
-                    mini: true,
-                    backgroundColor: Colors.white.withOpacity(0.8),
-                    onPressed: _recenterOnUser,
-                    child: Icon(Icons.my_location, color: Colors.black),
+                    heroTag: "menuButton",
+                    backgroundColor: Colors.white.withOpacity(0.9),
+                    foregroundColor: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
+                    elevation: 4,
+                    onPressed: _toggleMenu, // ✅ Open or close menu
+                    child: Icon(Icons.tune_rounded, size: 42), // ✅ Bigger Icon
                   ),
                 ),
 
-                // 🧭 Compass Button (Reset to North)
-                Positioned(
-                  bottom: 100,
-                  right: 10,
-                  child: FloatingActionButton(
-                    heroTag: "btn2",
-                    mini: true,
-                    backgroundColor: Colors.white.withOpacity(0.8),
-                    onPressed: _resetToNorth,
-                    child: Icon(Icons.explore, color: Colors.black), // Compass icon
-                  ),
-                )
-                ,
+                // ✅ Dropdown Menu Items (Shown when menu is expanded)
+                if (_menuExpanded) ...[
+                  _buildMenuItem(208, Icons.download, "Bulk Download", _downloadDisplayedRegion),
+                  _buildMenuItem(144, Icons.explore, "Reset North", _resetToNorth),
+                  _buildMenuItem(80, Icons.my_location, "Recenter", _recenterOnUser),
+      
           _buildBottomPanel(),
+                ]
         ],
+      ),
+    );
+  }
+
+
+  // 🔹 Menu Item Builder (Reusable for each option)
+  Widget _buildMenuItem(double top, IconData icon, String tooltip, VoidCallback onPressed) {
+    return Positioned(
+      top: top,
+      right: 14,
+      child: FloatingActionButton(
+        heroTag: tooltip, // Unique identifier
+        backgroundColor: Colors.white.withOpacity(0.9),
+        elevation: 3,
+        onPressed: () {
+          setState(() => _menuExpanded = false); // ✅ Close menu when pressed
+          onPressed();
+        },
+        tooltip: tooltip,
+        child: Icon(icon, size: 34, color: const Color.fromARGB(255, 67, 67, 67)), // ✅ Bigger Icon
       ),
     );
   }

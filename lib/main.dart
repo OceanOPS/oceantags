@@ -76,8 +76,8 @@ class _MyAppState extends State<MyApp> {
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Color.fromARGB(255, 126, 58, 109),
-          unselectedItemColor: Colors.black54,
+          selectedItemColor: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
+          unselectedItemColor:Color.fromARGB(255, 28, 28, 28),
         ),
       ),
       darkTheme: ThemeData(
@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Color.fromARGB(255, 20, 20, 20),
-          selectedItemColor: Color.fromARGB(255, 230, 100, 182),
+          selectedItemColor: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
           unselectedItemColor: Colors.white60,
         ),
       ),
@@ -134,6 +134,9 @@ Widget build(BuildContext context) {
     appBar: AppBar(
       leading: IconButton(
         icon: Icon(Icons.account_circle, size: 28),
+        color: widget.isDarkMode
+                ? Color.fromARGB(255, 209, 209, 209)
+                : Color.fromARGB(255, 63, 63, 63),
         onPressed: () {
           // ✅ Handle user profile action (e.g., show user details)
           print("User profile clicked!");
@@ -146,7 +149,7 @@ Widget build(BuildContext context) {
             fontSize: 20.0,
             color: widget.isDarkMode
                 ? Color.fromARGB(255, 209, 209, 209)
-                : Color.fromARGB(255, 77, 77, 77),
+                : Color.fromARGB(255, 63, 63, 63),
           ),
           children: [
             TextSpan(
@@ -175,8 +178,8 @@ Widget build(BuildContext context) {
               child: Row(
                 children: [
                   Icon(
-                    widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                    color: widget.isDarkMode ? Colors.black : Colors.grey[700],
+                    widget.isDarkMode ? Icons.light_mode : Icons.dark_mode ,
+                    color: widget.isDarkMode ? const Color.fromARGB(255, 225, 225, 225) : const Color.fromARGB(255, 66, 66, 66),
                   ),
                   SizedBox(width: 10),
                   Text(widget.isDarkMode ? "Light Mode" : "Dark Mode"),
