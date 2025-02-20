@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/map_screen.dart';
 import 'screens/qr_scan_screen.dart';
 import 'screens/data_screen.dart';
+import 'screens/platform_list_srceen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/photos_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -119,7 +120,8 @@ class _HomeScreenState extends State<HomeScreen> {
     QRScanScreen(),
     PhotosScreen(),
     AlertsScreen(),
-    DataScreen(),
+    // DataScreen(),
+    PlatformListScreen(),
   ];
 
   void _onItemTapped(int index) {
