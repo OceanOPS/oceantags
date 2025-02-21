@@ -179,19 +179,12 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
               
               Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                // crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 🔹 Nom + Favoris bien alignés
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Corrige l'alignement
+                    // mainAxisSize: MainAxisSize.min, // Ajouté pour éviter que l'icône prenne trop d'espace
                     children: [
-                      Expanded(
-                        child: Text(
-                          platform.reference,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis, // Évite les débordements
-                        ),
-                      ),
                       GestureDetector(
                         onTap: () => _toggleFavorite(platform),
                         child: Icon(
@@ -200,10 +193,28 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
                           size: 26,
                         ),
                       ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          platform.reference,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+
+                  // 🔹 Localisation avec icône
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.redAccent, size: 20),
+                      SizedBox(width: 6),
+                      Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Colors.black54)),
                     ],
                   ),
                   SizedBox(height: 6),
-
+                  
                   Row(
                     children: [
                       Icon(Icons.wifi, color: Colors.blueAccent, size: 20),
@@ -234,7 +245,15 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
                 ],
               ),
               ),
-              _buildStatusBadge(platform.status)
+              // ✅ Statut bien aligné en bas à droite
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(height: 50), // 🔹 Pousse le statut vers le bas
+                _buildStatusBadge(platform.status),
+              ],
+            ),
             ],
           ),
         ),
@@ -244,26 +263,17 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
 
   // 🔹 Badge de statut
   Widget _buildStatusBadge(String status) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SizedBox(height: 40), // Pour forcer l'alignement vers le bas
-        Align(
-          alignment: Alignment.bottomRight,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _getStatusColor(status),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
+    return Container(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: _getStatusColor(status),
+          borderRadius: BorderRadius.circular(8),
         ),
-      ],
-    );
+        child: Text(
+          status,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      );
   }
 
   @override
