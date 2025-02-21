@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'screens/map_screen.dart';
 import 'screens/qr_scan_screen.dart';
 import 'screens/data_screen.dart';
-import 'screens/alerts_screen.dart';
-import 'screens/photos_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'platform_model.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
@@ -29,7 +27,6 @@ void main() async {
 
   runApp(MyApp(isDarkMode: isDarkMode));
 }
-
 
 class MyApp extends StatefulWidget {
   final bool isDarkMode;
@@ -65,36 +62,22 @@ class _MyAppState extends State<MyApp> {
       title: 'OceanTags',
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
+        useMaterial3: true, // ✅ Enable Material 3
         brightness: Brightness.light,
-        primarySwatch: Colors.blue,
-        fontFamily: 'Montserrat',
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 1,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromRGBO(137, 26, 255, 1), // ✅ Single source of color
+          brightness: Brightness.light,
         ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
-          unselectedItemColor:Color.fromARGB(255, 28, 28, 28),
-        ),
+        fontFamily: 'M3', // ✅ Material 3 Typography
       ),
       darkTheme: ThemeData(
+        useMaterial3: true, // ✅ Enable Material 3
         brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        fontFamily: 'Montserrat',
-        scaffoldBackgroundColor: Color.fromARGB(255, 28, 28, 28),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color.fromARGB(255, 28, 28, 28),
-          foregroundColor: Colors.white,
-          elevation: 1,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromRGBO(137, 26, 255, 1), // ✅ Single source of color
+          brightness: Brightness.dark,
         ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: Color.fromARGB(255, 20, 20, 20),
-          selectedItemColor: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
-          unselectedItemColor: Colors.white60,
-        ),
+        fontFamily: 'M3',
       ),
       home: HomeScreen(toggleDarkMode: _toggleDarkMode, isDarkMode: _isDarkMode),
     );
@@ -116,10 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     MapScreen(),
-    QRScanScreen(),
-    PhotosScreen(),
-    AlertsScreen(),
     DataScreen(),
+    QRScanScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -128,82 +109,91 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      leading: IconButton(
-        icon: Icon(Icons.account_circle, size: 28),
-        color: widget.isDarkMode
-                ? Color.fromARGB(255, 209, 209, 209)
-                : Color.fromARGB(255, 63, 63, 63),
-        onPressed: () {
-          // ✅ Handle user profile action (e.g., show user details)
-          print("User profile clicked!");
-        },
-      ),
-      title: RichText(
-        text: TextSpan(
-          style: TextStyle(
-            fontFamily: 'Montserrat',
-            fontSize: 20.0,
-            color: widget.isDarkMode
-                ? Color.fromARGB(255, 209, 209, 209)
-                : Color.fromARGB(255, 63, 63, 63),
-          ),
-          children: [
-            TextSpan(
-              text: 'Ocean', // Regular text
-              style: TextStyle(fontWeight: FontWeight.normal),
-            ),
-            TextSpan(
-              text: 'Tags', // Bold text
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-      centerTitle: true,
-      actions: [
-        PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == "toggle_dark_mode") {
-              widget.toggleDarkMode(); // ✅ Toggle Dark/Light Mode
-            }
-          },
-          icon: Icon(Icons.more_vert), // Three-dot menu icon
-          itemBuilder: (BuildContext context) => [
-            PopupMenuItem(
-              value: "toggle_dark_mode",
-              child: Row(
-                children: [
-                  Icon(
-                    widget.isDarkMode ? Icons.light_mode : Icons.dark_mode ,
-                    color: widget.isDarkMode ? const Color.fromARGB(255, 225, 225, 225) : const Color.fromARGB(255, 66, 66, 66),
-                  ),
-                  SizedBox(width: 10),
-                  Text(widget.isDarkMode ? "Light Mode" : "Dark Mode"),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-    body: _screens[_selectedIndex],
-    bottomNavigationBar: BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: _selectedIndex,
-      onTap: _onItemTapped,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-        BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: 'Scan'),
-        BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add'),
-        BottomNavigationBarItem(icon: Icon(Icons.notifications_none_outlined), label: 'Alerts'),
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-      ],
-    ),
-  );
-}
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface, // ✅ Depends on seed color
+        foregroundColor: colorScheme.onSurface, // ✅ Dynamic based on theme
+        leading: IconButton(
+          icon: Icon(Icons.account_circle, size: 28),
+          color: colorScheme.onSurfaceVariant, // ✅ Matches Material 3
+          onPressed: () {
+            print("User profile clicked!");
+          },
+        ),
+        title: RichText(
+          text: TextSpan(
+            style: TextStyle(
+              fontFamily: 'M3',
+              fontSize: 20.0,
+              color: colorScheme.onSurface, // ✅ Adapts to theme
+            ),
+            children: [
+              TextSpan(text: 'Ocean', style: TextStyle(fontWeight: FontWeight.normal)),
+              TextSpan(text: 'Tags', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == "toggle_dark_mode") {
+                widget.toggleDarkMode();
+              }
+            },
+            icon: Icon(Icons.more_vert, color: colorScheme.onSurface), // ✅ Matches theme
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem(
+                value: "toggle_dark_mode",
+                child: Row(
+                  children: [
+                    Icon(
+                      widget.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                      color: colorScheme.onSurfaceVariant, // ✅ Theme-based
+                    ),
+                    SizedBox(width: 10),
+                    Text(widget.isDarkMode ? "Light Mode" : "Dark Mode"),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: colorScheme.surface,
+        indicatorColor: colorScheme.primaryContainer, // ✅ This highlights selected button
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.map),
+            selectedIcon: Icon(Icons.map, color: colorScheme.onPrimaryContainer), // ✅ Highlighted Icon
+            label: 'Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search),
+            selectedIcon: Icon(Icons.search, color: colorScheme.onPrimaryContainer), // ✅ Highlighted Icon
+            label: 'Search',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.qr_code_scanner),
+            selectedIcon: Icon(Icons.qr_code_scanner, color: colorScheme.onPrimaryContainer),
+            label: 'Scan',
+          ),
+        ],
+      )
+,
+    );
+  }
 }

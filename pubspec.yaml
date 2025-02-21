@@ -41,7 +41,3 @@ flutter:
     # Add assets from the images directory to the application.
     - assets/images/
 
-  fonts:
-    - family: Montserrat
-      fonts:
-        - asset: assets/fonts/Montserrat-Regular.ttf
