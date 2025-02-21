@@ -5,12 +5,12 @@ import 'dart:convert';
 import '../platform_model.dart';
 import 'platform_detail_screen.dart';
 
-class PlatformListScreen extends StatefulWidget {
+class SearchScreen extends StatefulWidget {
   @override
-  _PlatformListScreenState createState() => _PlatformListScreenState();
+  _SearchScreenState createState() => _SearchScreenState();
 }
 
-class _PlatformListScreenState extends State<PlatformListScreen> {
+class _SearchScreenState extends State<SearchScreen> {
   late Box<PlatformModel> _platformBox;
   List<PlatformModel> filteredPlatforms = [];
   TextEditingController searchController = TextEditingController();

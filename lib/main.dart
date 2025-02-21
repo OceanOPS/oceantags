@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/map_screen.dart';
 import 'screens/qr_scan_screen.dart';
-import 'screens/data_screen.dart';
-import 'screens/platform_list_srceen.dart';
-import 'screens/alerts_screen.dart';
-import 'screens/photos_screen.dart';
+import 'screens/search_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'platform_model.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
@@ -102,11 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     MapScreen(),
+    SearchScreen(),
     QRScanScreen(),
-    PhotosScreen(),
-    AlertsScreen(),
-    // DataScreen(),
-    PlatformListScreen(),
   ];
 
   void _onItemTapped(int index) {
