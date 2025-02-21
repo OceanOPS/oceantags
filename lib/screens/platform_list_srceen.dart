@@ -35,7 +35,7 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
     });
   }
 
-void _addDummyPlatforms() {
+  void _addDummyPlatforms() {
     setState(() {
       filteredPlatforms = _platformBox.values.toList();
     });
@@ -44,6 +44,7 @@ void _addDummyPlatforms() {
   Future<void> _initializeBox() async {
     await Hive.deleteBoxFromDisk('platforms'); // ✅ Reset Hive to remove corrupted data
     _platformBox = await Hive.openBox<PlatformModel>('platforms');
+    setState(() {}); // Met à jour l'interface
     await _fetchPlatformData();
     filteredPlatforms = _platformBox.values.toList();
     searchController.addListener(_filterPlatforms);
@@ -114,6 +115,13 @@ void _addDummyPlatforms() {
     // );
   }
 
+  void _toggleFavorite(PlatformModel platform) {
+    setState(() {
+      platform.isFavorite = !platform.isFavorite;
+      platform.save(); // Sauvegarde la modification dans Hive
+    });
+  }
+
   Widget _buildPlatformCard(PlatformModel platform) {
     return GestureDetector( // Ajout du clic
       onTap: () => _openPlatformDetails(platform), // 🔹 Navigue vers les détails
@@ -137,7 +145,16 @@ void _addDummyPlatforms() {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  _buildStatusBadge(platform.status), // 🔵 Badge statut
+                  // ✅ Icône "cœur" pour ajouter aux favoris
+                  GestureDetector(
+                    onTap: () => _toggleFavorite(platform),
+                    child: Icon(
+                      platform.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: platform.isFavorite ? Colors.red : Colors.grey,
+                      size: 26,
+                    ),
+                  ),
+                  // _buildStatusBadge(platform.status), // 🔵 Badge statut
                 ],
               ),
               SizedBox(height: 8),
