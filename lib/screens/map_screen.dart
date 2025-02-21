@@ -235,7 +235,7 @@ String _getNetworkImage(String network) {
           height: _pulseController.value * 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color:  const Color.fromARGB(255, 247, 133, 133).withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
           ),
         );
       },
@@ -347,7 +347,6 @@ String _getNetworkImage(String network) {
 
 Widget _buildBottomPanel() {
   if (_selectedPlatform == null) return SizedBox.shrink();
-  bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
   return DraggableScrollableSheet(
     initialChildSize: 0.4, // Default height (30% of screen)
@@ -358,7 +357,7 @@ Widget _buildBottomPanel() {
         padding: EdgeInsets.all(12),
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.black.withOpacity(0.85) : Colors.white.withOpacity(0.85),
+          color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.9),
           borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
         ),
         child: Column(
@@ -370,7 +369,7 @@ Widget _buildBottomPanel() {
                 width: 50,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.white : Color.fromARGB(255, 31, 31, 31),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -381,10 +380,10 @@ Widget _buildBottomPanel() {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Color.fromARGB(255, 31, 31, 31),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            Divider(color: Colors.white38),
+            Divider(color: Theme.of(context).colorScheme.primary),
             Expanded(
               child: ListView(
                 controller: scrollController, // Enable scrolling when expanded
@@ -407,14 +406,13 @@ Widget _buildBottomPanel() {
 
 
   Widget _buildInfoRow(String label, String value) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: isDarkMode ? Colors.white70 :  const Color.fromARGB(255, 31, 31, 31), fontSize: 16)),
-          Text(value, style: TextStyle(color: isDarkMode ? Colors.white :  const Color.fromARGB(255, 31, 31, 31), fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 16)),
+          Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -424,8 +422,6 @@ Widget _buildBottomPanel() {
 
   void _downloadDisplayedRegion() async {
     if (_downloading) return; // ✅ Prevent duplicate downloads
-
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark; // ✅ Detect Dark Mode
 
     // ✅ Cancel the previous subscription before starting a new one
     await _progressSubscription?.cancel();
@@ -446,9 +442,7 @@ Widget _buildBottomPanel() {
       maxZoom: 15, // ✅ Fixed maximum zoom level
       options: TileLayer(
         tileProvider: _tileProvider, // ✅ Use same tile provider as displayed map
-        urlTemplate: isDarkMode
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' // Dark mode
-            : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap
+        urlTemplate: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap
         subdomains: ['a', 'b', 'c'],
         userAgentPackageName: 'com.example.oceantrack',
       ),
@@ -534,8 +528,6 @@ Widget _buildBottomPanel() {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Determine if the app is in dark mode
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Stack(
@@ -552,9 +544,7 @@ Widget _buildBottomPanel() {
                     // ✅ Switch Tile Layer based on Dark/Light Mode
                     TileLayer(
                       tileProvider: _tileProvider,
-                      urlTemplate: isDarkMode
-                          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' // Dark mode tile
-                          : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap
+                      urlTemplate: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', // Oceanography basemap
                       subdomains: ['a', 'b', 'c'],
                     ),
       
@@ -595,23 +585,23 @@ Widget _buildBottomPanel() {
 
                 // ✅ Settings Map Button 
                 Positioned(
-                  top: 16, // Adjust base position
+                  top: 20, // Adjust base position
                   right: 14,
                   child: FloatingActionButton(
                     heroTag: "menuButton",
-                    backgroundColor: Colors.white.withOpacity(0.9),
-                    foregroundColor: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer, // ✅ Background from theme
+                    foregroundColor: Theme.of(context).colorScheme.primary, 
                     elevation: 4,
                     onPressed: _toggleMenu, // ✅ Open or close menu
-                    child: Icon(Icons.tune_rounded, size: 42), // ✅ Bigger Icon
+                    child: Icon(Icons.tune_rounded, size: 40), // ✅ Bigger Icon
                   ),
                 ),
 
                 // ✅ Dropdown Menu Items (Shown when menu is expanded)
                 if (_menuExpanded) ...[
-                  _buildMenuItem(208, Icons.download, "Bulk Download", _downloadDisplayedRegion),
-                  _buildMenuItem(144, Icons.explore, "Reset North", _resetToNorth),
-                  _buildMenuItem(80, Icons.my_location, "Recenter", _recenterOnUser),
+                  _buildMenuItem(214, Icons.download, "Bulk Download", _downloadDisplayedRegion),
+                  _buildMenuItem(150, Icons.explore, "Reset North", _resetToNorth),
+                  _buildMenuItem(86, Icons.my_location, "Recenter", _recenterOnUser),
       
           _buildBottomPanel(),
                 ]
@@ -628,14 +618,14 @@ Widget _buildBottomPanel() {
       right: 14,
       child: FloatingActionButton(
         heroTag: tooltip, // Unique identifier
-        backgroundColor: Colors.white.withOpacity(0.9),
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
         elevation: 3,
         onPressed: () {
           setState(() => _menuExpanded = false); // ✅ Close menu when pressed
           onPressed();
         },
         tooltip: tooltip,
-        child: Icon(icon, size: 34, color: const Color.fromARGB(255, 67, 67, 67)), // ✅ Bigger Icon
+        child: Icon(icon, size: 34, color: Theme.of(context).colorScheme.secondary), // ✅ Bigger Icon
       ),
     );
   }

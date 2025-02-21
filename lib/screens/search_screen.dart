@@ -210,7 +210,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     children: [
                       Icon(Icons.location_on, color: Colors.redAccent, size: 20),
                       SizedBox(width: 6),
-                      Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Colors.black54)),
+                      Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ],
                   ),
                   SizedBox(height: 6),
@@ -221,7 +221,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       SizedBox(width: 6),
                       Text(
                         platform.network, 
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       )
@@ -235,7 +235,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       SizedBox(width: 6),
                       Text(
                         platform.model, 
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       )
@@ -279,7 +279,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Liste des plateformes")),
+      appBar: AppBar(title: Text("Search platforms")),
       body: Column(
         children: [
           Padding(
@@ -287,7 +287,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: TextField(
               controller: searchController,
               decoration: InputDecoration(
-                labelText: "Rechercher...",
+                labelText: "Search...",
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
