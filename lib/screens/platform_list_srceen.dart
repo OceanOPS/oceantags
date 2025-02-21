@@ -122,6 +122,19 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
     });
   }
 
+  String _getNetworkImage(String network) {
+  Map<String, String> networkImages = {
+    'argo': 'assets/images/argo.png',
+    'dbcp': 'assets/images/drifter.png',
+    'oceansites': 'assets/images/buoy.png',
+    'sot': 'assets/images/ship.png',
+    'oceangliders': 'assets/images/glider.png',
+    'anibos': 'assets/images/anibos.png',
+  };
+
+  return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
+}
+
   Widget _buildPlatformCard(PlatformModel platform) {
     return GestureDetector( // Ajout du clic
       onTap: () => _openPlatformDetails(platform), // 🔹 Navigue vers les détails
@@ -131,75 +144,169 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Padding(
           padding: EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row( // ✅ Utilisation d'un Row pour aligner l'image et le texte
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 🔹 Titre avec icône
-              Row(
-                children: [
-                  Icon(Icons.storage, color: Colors.blueAccent),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      platform.reference,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  // ✅ Icône "cœur" pour ajouter aux favoris
-                  GestureDetector(
-                    onTap: () => _toggleFavorite(platform),
-                    child: Icon(
-                      platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: platform.isFavorite ? Colors.red : Colors.grey,
-                      size: 26,
-                    ),
-                  ),
-                  // _buildStatusBadge(platform.status), // 🔵 Badge statut
-                ],
+              // 🔹 Image à gauche
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10), // Arrondi pour un look moderne
+                child: Image.asset(
+                  _getNetworkImage(platform.network), // Chemin du fichier local
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
               ),
-              SizedBox(height: 8),
-
-              // 🔹 Localisation avec icône
-              Row(
-                children: [
-                  Icon(Icons.location_on, color: Colors.redAccent, size: 20),
-                  SizedBox(width: 6),
-                  Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Colors.black54)),
-                ],
-              ),
-              SizedBox(height: 6),
-
-              Row(
-                children: [
-                  Icon(Icons.wifi, color: Colors.blueAccent, size: 20),
-                  SizedBox(width: 6),
-                  Text(
-                    platform.network, 
-                    style: TextStyle(fontSize: 14, color: Colors.black87),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                ],
-              ),
-              SizedBox(height: 6),
+              SizedBox(width: 12), // Espace entre l'image et le texte
               
-              Row(
+              Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.branding_watermark, color: Colors.orange, size: 20),
-                  SizedBox(width: 6),
-                  Text(
-                    platform.model, 
-                    style: TextStyle(fontSize: 14, color: Colors.black87),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  )
+                  // 🔹 Titre avec icône
+                  Row(
+                    children: [
+                      Icon(Icons.storage, color: Colors.blueAccent),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          platform.reference,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      // ✅ Icône "cœur" pour ajouter aux favoris
+                      GestureDetector(
+                        onTap: () => _toggleFavorite(platform),
+                        child: Icon(
+                          platform.isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: platform.isFavorite ? Colors.red : Colors.grey,
+                          size: 26,
+                        ),
+                      ),
+                      // _buildStatusBadge(platform.status), // 🔵 Badge statut
+                    ],
+                  ),
+                  SizedBox(height: 8),
+
+                  // 🔹 Localisation avec icône
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.redAccent, size: 20),
+                      SizedBox(width: 6),
+                      Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Colors.black54)),
+                    ],
+                  ),
+                  SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      Icon(Icons.wifi, color: Colors.blueAccent, size: 20),
+                      SizedBox(width: 6),
+                      Text(
+                        platform.network, 
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 6),
+                  
+                  Row(
+                    children: [
+                      Icon(Icons.branding_watermark, color: Colors.orange, size: 20),
+                      SizedBox(width: 6),
+                      Text(
+                        platform.model, 
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 6),
                 ],
               ),
-              SizedBox(height: 6),
+              ),
             ],
           ),
         ),
-      )
+      ),
+      // Card(
+      //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      //   elevation: 4,
+      //   margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      //   child: Padding(
+      //     padding: EdgeInsets.all(12),
+      //     child: Row( // ✅ Utilisation d'un Row pour aligner l'image et le texte
+      //       crossAxisAlignment: CrossAxisAlignment.center,
+      //       children: [
+      //         // 🔹 Image à gauche
+      //         ClipRRect(
+      //           borderRadius: BorderRadius.circular(10), // Arrondi pour un look moderne
+      //           child: Image.network(
+      //             platform.imageUrl, // URL de l'image
+      //             width: 80, // Taille ajustable
+      //             height: 80,
+      //             fit: BoxFit.cover, // Ajustement de l'image
+      //             errorBuilder: (context, error, stackTrace) => Icon(
+      //               Icons.broken_image, color: Colors.grey, size: 80,
+      //             ),
+      //           ),
+      //         ),
+      //         SizedBox(width: 12), // Espace entre l'image et le texte
+
+      //         // 🔹 Texte à droite
+      //         Expanded(
+      //           child: Column(
+      //             crossAxisAlignment: CrossAxisAlignment.start,
+      //             children: [
+      //               // 🔹 Titre + Favoris
+      //               Row(
+      //                 children: [
+      //                   Expanded(
+      //                     child: Text(
+      //                       platform.name,
+      //                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      //                     ),
+      //                   ),
+      //                   GestureDetector(
+      //                     onTap: () => _toggleFavorite(platform),
+      //                     child: Icon(
+      //                       platform.isFavorite ? Icons.favorite : Icons.favorite_border,
+      //                       color: platform.isFavorite ? Colors.red : Colors.grey,
+      //                       size: 26,
+      //                     ),
+      //                   ),
+      //                 ],
+      //               ),
+      //               SizedBox(height: 6),
+
+      //               // 🔹 Localisation
+      //               Row(
+      //                 children: [
+      //                   Icon(Icons.location_on, color: Colors.redAccent, size: 20),
+      //                   SizedBox(width: 6),
+      //                   Text(platform.location, style: TextStyle(fontSize: 14, color: Colors.black54)),
+      //                 ],
+      //               ),
+      //               SizedBox(height: 4),
+
+      //               // 🔹 Description tronquée
+      //               Text(
+      //                 platform.description,
+      //                 style: TextStyle(fontSize: 14, color: Colors.black87),
+      //                 maxLines: 2,
+      //                 overflow: TextOverflow.ellipsis,
+      //               ),
+      //             ],
+      //           ),
+      //         ),
+      //       ],
+      //     ),
+      //   ),
+      // );
+
     );
   }
 
