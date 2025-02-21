@@ -23,6 +23,7 @@ class PlatformModelAdapter extends TypeAdapter<PlatformModel> {
       status: fields[3] as String,
       model: fields[4] as String,
       network: fields[5] as String,
+      isFavorite: fields[6] as bool,
     );
   }
 
@@ -41,7 +42,9 @@ class PlatformModelAdapter extends TypeAdapter<PlatformModel> {
       ..writeByte(4)
       ..write(obj.model)
       ..writeByte(5)
-      ..write(obj.network);
+      ..write(obj.network)
+      ..writeByte(6)
+      ..write(obj.isFavorite);
   }
 
   @override

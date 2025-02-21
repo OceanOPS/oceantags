@@ -22,6 +22,9 @@ class PlatformModel extends HiveObject {
   @HiveField(5)
   String network;
 
+  @HiveField(6)
+  bool isFavorite;
+
   PlatformModel({
     required this.reference,
     required this.latitude,
@@ -29,6 +32,7 @@ class PlatformModel extends HiveObject {
     required this.status,
     required this.model,
     required this.network,
+    this.isFavorite = false,
   });
 
   factory PlatformModel.fromJson(Map<String, dynamic> json) {
