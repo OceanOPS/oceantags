@@ -123,17 +123,35 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
   }
 
   String _getNetworkImage(String network) {
-  Map<String, String> networkImages = {
-    'argo': 'assets/images/argo.png',
-    'dbcp': 'assets/images/drifter.png',
-    'oceansites': 'assets/images/buoy.png',
-    'sot': 'assets/images/ship.png',
-    'oceangliders': 'assets/images/glider.png',
-    'anibos': 'assets/images/anibos.png',
-  };
+    Map<String, String> networkImages = {
+      'argo': 'assets/images/argo.png',
+      'dbcp': 'assets/images/drifter.png',
+      'oceansites': 'assets/images/buoy.png',
+      'sot': 'assets/images/ship.png',
+      'oceangliders': 'assets/images/glider.png',
+      'anibos': 'assets/images/anibos.png',
+    };
 
-  return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
-}
+    return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
+  }
+
+  // Fonction pour obtenir la couleur du statut
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case "OPERATIONAL":
+        return Colors.green;
+      case "INACTIVE":
+        return Colors.redAccent;
+      case "PROBABLE":
+        return Colors.orangeAccent;
+      case "REGISTERED":
+        return Colors.blueAccent;
+      case "CONFIRMED":
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
 
   Widget _buildPlatformCard(PlatformModel platform) {
     return GestureDetector( // Ajout du clic
@@ -144,7 +162,7 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Padding(
           padding: EdgeInsets.all(12),
-          child: Row( // ✅ Utilisation d'un Row pour aligner l'image et le texte
+          child: Row( // Utilisation d'un Row pour aligner l'image et le texte
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // 🔹 Image à gauche
@@ -163,18 +181,17 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔹 Titre avec icône
+                  // 🔹 Nom + Favoris bien alignés
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Corrige l'alignement
                     children: [
-                      Icon(Icons.storage, color: Colors.blueAccent),
-                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           platform.reference,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis, // Évite les débordements
                         ),
                       ),
-                      // ✅ Icône "cœur" pour ajouter aux favoris
                       GestureDetector(
                         onTap: () => _toggleFavorite(platform),
                         child: Icon(
@@ -183,17 +200,6 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
                           size: 26,
                         ),
                       ),
-                      // _buildStatusBadge(platform.status), // 🔵 Badge statut
-                    ],
-                  ),
-                  SizedBox(height: 8),
-
-                  // 🔹 Localisation avec icône
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, color: Colors.redAccent, size: 20),
-                      SizedBox(width: 6),
-                      Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Colors.black54)),
                     ],
                   ),
                   SizedBox(height: 6),
@@ -224,105 +230,39 @@ class _PlatformListScreenState extends State<PlatformListScreen> {
                       )
                     ],
                   ),
-                  SizedBox(height: 6),
+                  // SizedBox(height: 6),
                 ],
               ),
               ),
+              _buildStatusBadge(platform.status)
             ],
           ),
         ),
       ),
-      // Card(
-      //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      //   elevation: 4,
-      //   margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      //   child: Padding(
-      //     padding: EdgeInsets.all(12),
-      //     child: Row( // ✅ Utilisation d'un Row pour aligner l'image et le texte
-      //       crossAxisAlignment: CrossAxisAlignment.center,
-      //       children: [
-      //         // 🔹 Image à gauche
-      //         ClipRRect(
-      //           borderRadius: BorderRadius.circular(10), // Arrondi pour un look moderne
-      //           child: Image.network(
-      //             platform.imageUrl, // URL de l'image
-      //             width: 80, // Taille ajustable
-      //             height: 80,
-      //             fit: BoxFit.cover, // Ajustement de l'image
-      //             errorBuilder: (context, error, stackTrace) => Icon(
-      //               Icons.broken_image, color: Colors.grey, size: 80,
-      //             ),
-      //           ),
-      //         ),
-      //         SizedBox(width: 12), // Espace entre l'image et le texte
-
-      //         // 🔹 Texte à droite
-      //         Expanded(
-      //           child: Column(
-      //             crossAxisAlignment: CrossAxisAlignment.start,
-      //             children: [
-      //               // 🔹 Titre + Favoris
-      //               Row(
-      //                 children: [
-      //                   Expanded(
-      //                     child: Text(
-      //                       platform.name,
-      //                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      //                     ),
-      //                   ),
-      //                   GestureDetector(
-      //                     onTap: () => _toggleFavorite(platform),
-      //                     child: Icon(
-      //                       platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-      //                       color: platform.isFavorite ? Colors.red : Colors.grey,
-      //                       size: 26,
-      //                     ),
-      //                   ),
-      //                 ],
-      //               ),
-      //               SizedBox(height: 6),
-
-      //               // 🔹 Localisation
-      //               Row(
-      //                 children: [
-      //                   Icon(Icons.location_on, color: Colors.redAccent, size: 20),
-      //                   SizedBox(width: 6),
-      //                   Text(platform.location, style: TextStyle(fontSize: 14, color: Colors.black54)),
-      //                 ],
-      //               ),
-      //               SizedBox(height: 4),
-
-      //               // 🔹 Description tronquée
-      //               Text(
-      //                 platform.description,
-      //                 style: TextStyle(fontSize: 14, color: Colors.black87),
-      //                 maxLines: 2,
-      //                 overflow: TextOverflow.ellipsis,
-      //               ),
-      //             ],
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      //   ),
-      // );
-
     );
   }
 
   // 🔹 Badge de statut
   Widget _buildStatusBadge(String status) {
-    Color badgeColor = status == "OPERATIONAL" ? Colors.green : Colors.red;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold),
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        SizedBox(height: 40), // Pour forcer l'alignement vers le bas
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getStatusColor(status),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
