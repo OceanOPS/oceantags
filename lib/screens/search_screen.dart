@@ -26,6 +26,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _db = widget.database;
     searchController.addListener(_filterPlatforms);
     _fetchPlatformData();
+    _filterPlatforms();
   }
 
   Future<void> _fetchPlatformData() async {
