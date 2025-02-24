@@ -21,7 +21,7 @@ void main() async {
     initErr = err;
   }
 
-  runApp(OceanTagsApp(database: database)); // ✅ Start the app
+  runApp(OceanTagsApp(database: database));
 }
 
 /// 🔹 Stateful Widget to Control ThemeMode
@@ -35,9 +35,8 @@ class OceanTagsApp extends StatefulWidget {
 }
 
 class _OceanTagsAppState extends State<OceanTagsApp> {
-  bool _isDarkMode = false; // ✅ Track dark mode state
+  bool _isDarkMode = false;
 
-  /// ✅ Toggles Dark/Light Mode
   void _toggleDarkMode() {
     setState(() {
       _isDarkMode = !_isDarkMode;
@@ -54,7 +53,6 @@ class _OceanTagsAppState extends State<OceanTagsApp> {
   }
 }
 
-/// 🔹 Separate Widget for Theme Handling (Ensures Proper Updates)
 class OceanTagsTheme extends StatelessWidget {
   final bool isDarkMode;
   final VoidCallback toggleDarkMode;
@@ -69,7 +67,7 @@ class OceanTagsTheme extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final seedColor = const Color.fromRGBO(137, 26, 255, 1); // ✅ Define seed color once
+    final seedColor = const Color.fromRGBO(137, 26, 255, 1);
 
     final lightTheme = ThemeData(
       useMaterial3: true,
@@ -89,7 +87,7 @@ class OceanTagsTheme extends StatelessWidget {
       title: 'OceanTags',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light, // ✅ Toggle theme
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: OceanTagsHome(
         database: database,
         toggleDarkMode: toggleDarkMode,
@@ -98,7 +96,6 @@ class OceanTagsTheme extends StatelessWidget {
   }
 }
 
-/// 🔹 Main Scaffold with AppBar & Navigation
 class OceanTagsHome extends StatefulWidget {
   final AppDatabase database;
   final VoidCallback toggleDarkMode;
@@ -123,11 +120,11 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorScheme.surface, // ✅ Now based on seed color
-        foregroundColor: colorScheme.onSurface, // ✅ Adapts to dark mode
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
         leading: IconButton(
           icon: Icon(Icons.account_circle, size: 28),
-          color: colorScheme.onSurfaceVariant, // ✅ Now based on theme
+          color: colorScheme.onSurfaceVariant,
           onPressed: () {
             print("User profile clicked!");
           },
@@ -137,7 +134,7 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
             style: TextStyle(
               fontFamily: 'M3',
               fontSize: 20.0,
-              color: colorScheme.onSurface, // ✅ Now based on theme
+              color: colorScheme.onSurface,
             ),
             children: [
               TextSpan(text: 'Ocean', style: TextStyle(fontWeight: FontWeight.normal)),
@@ -150,10 +147,10 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == "toggle_dark_mode") {
-                widget.toggleDarkMode(); // ✅ Toggle Dark Mode
+                widget.toggleDarkMode();
               }
             },
-            icon: Icon(Icons.more_vert, color: colorScheme.onSurface), // ✅ Based on theme
+            icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
             itemBuilder: (BuildContext context) => [
               PopupMenuItem(
                 value: "toggle_dark_mode",
@@ -163,7 +160,7 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
                       Theme.of(context).brightness == Brightness.dark
                           ? Icons.light_mode
                           : Icons.dark_mode,
-                      color: colorScheme.onSurfaceVariant, // ✅ Based on theme
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     SizedBox(width: 10),
                     Text(Theme.of(context).brightness == Brightness.dark ? "Light Mode" : "Dark Mode"),
@@ -174,17 +171,17 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
           ),
         ],
       ),
-      body: IndexedStack( // ✅ Keeps state when switching tabs
+      body: IndexedStack(
         index: _selectedIndex,
         children: [
           MapScreen(database: widget.database),
           SearchScreen(database: widget.database), 
-          QRScanScreen(),
+          QRScanScreen(database: widget.database),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        backgroundColor: colorScheme.surface, // ✅ Now based on theme
-        indicatorColor: colorScheme.primaryContainer, // ✅ Matches theme
+        backgroundColor: colorScheme.surface,
+        indicatorColor: colorScheme.primaryContainer,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (int index) {
           setState(() {

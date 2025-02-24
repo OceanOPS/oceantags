@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../database/db.dart'; // ✅ Import Drift database
+import '../database/db.dart';
 
 class PlatformDetailScreen extends StatelessWidget {
-  final PlatformEntity platform; // ✅ Use PlatformEntity from Drift
+  final PlatformEntity platform;
 
   const PlatformDetailScreen({Key? key, required this.platform}) : super(key: key);
 
@@ -16,7 +16,7 @@ class PlatformDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           platform.reference,
-          style: textTheme.titleLarge, // ✅ Material 3 typography
+          style: textTheme.titleLarge,
         ),
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,

@@ -53,6 +53,11 @@ class AppDatabase extends _$AppDatabase {
 
   // ✅ Clear all platforms
   Future<void> clearPlatforms() => delete(platforms).go();
+
+  Future<PlatformEntity?> getPlatformByReference(String reference) {
+    return (select(platforms)..where((p) => p.reference.equals(reference))).getSingleOrNull();
+  }
+
 }
 
 LazyDatabase _openConnection() {
@@ -71,6 +76,7 @@ PlatformEntity platformFromJson(Map<String, dynamic> json) {
     status: json['ptfStatus']?['name'] ?? 'Unknown',
     model: json['ptfModel']?['name'] ?? 'Unknown',
     network: json['ptfModel']?['network']?['name'] ?? 'Unknown',
-    isFavorite: false, // ✅ Default value
+    isFavorite: false,
   );
 }
+
