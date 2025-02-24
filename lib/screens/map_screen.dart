@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:latlong2/latlong.dart' as latlong;
 import 'dart:async';
-import '../platform_model.dart';
 import 'dart:math';
-import 'dart:ui' as ui; // Explicitly import dart:ui for drawing paths
+import 'dart:ui' as ui;
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import '../database/db.dart'; 
 
 
 class MapScreen extends StatefulWidget {
+  final AppDatabase database; 
+
+  const MapScreen({Key? key, required this.database}) : super(key: key);
+
   @override
   _MapScreenState createState() => _MapScreenState();
 }
@@ -20,11 +22,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   LatLng? _currentLocation;
   bool _isLocationLoaded = false;
   bool _isBoxInitialized = false;
-  Box<PlatformModel>? _platformBox;
+  List<PlatformEntity> _platforms = [];
   bool _downloading = false;
   double _downloadProgress = 0.0;
   String _downloadMessage = "";
-  bool _menuExpanded = false; // ✅ Toggle menu visibility
+  bool _menuExpanded = false; 
 
   void _toggleMenu() {
     setState(() {
@@ -32,7 +34,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     });
   }
 
-  PlatformModel? _selectedPlatform;
+  PlatformEntity? _selectedPlatform;
   late final MapController _mapController;
 
   late AnimationController _pulseController;
@@ -62,14 +64,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Future<void> _initializePlatformData() async {
     try {
-      _platformBox = await Hive.openBox<PlatformModel>('platforms');
+      final platforms = await widget.database.getAllPlatforms(); // ✅ Fetch from Drift
       setState(() {
-        _isBoxInitialized = true;
+        _platforms = platforms; // ✅ Store fetched platforms
+        _isBoxInitialized = true; // ✅ Mark as initialized
       });
     } catch (e) {
       print("❌ Error initializing platform data: $e");
     }
   }
+
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
@@ -121,20 +125,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-  List<Widget> _buildRegularPlatformMarker(PlatformModel platform) {
-    return [
-      Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _getPlatformColor(platform.status),
-        ),
+List<Widget> _buildRegularPlatformMarker(PlatformEntity platform) {
+  return [
+    Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _getPlatformColor(platform.status), // ✅ Uses Drift model
       ),
-    ];
-  }
+    ),
+  ];
+}
 
-List<Widget> _buildHighlightedPlatformMarker(PlatformModel platform) {
+List<Widget> _buildHighlightedPlatformMarker(PlatformEntity platform) {
   return [
     // 📍 PNG Map Marker Positioned Correctly
     Positioned(
@@ -191,7 +195,7 @@ String _getNetworkImage(String network) {
 
 
   List<Marker> _platformMarkers() {
-    if (!_isBoxInitialized || _platformBox == null || _platformBox!.isEmpty) return [];
+    if (_platforms.isEmpty) return [];
 
     double zoomLevel = 9.0; // Default zoom in case _mapController isn't ready
     try {
@@ -202,7 +206,7 @@ String _getNetworkImage(String network) {
 
     bool showHighlighted = zoomLevel >= 9; // ✅ Show highlighted markers at zoom 10+
 
-    return _platformBox!.values.map((platform) {
+     return _platforms.map((platform) {
       return Marker(
         width: showHighlighted ? 80 : 16,
         height: showHighlighted ? 100 : 16,
@@ -272,11 +276,11 @@ String _getNetworkImage(String network) {
         children: [
           // 🎯 Round Pink Sphere with Reflection Effect
           Container(
-            width: 32,
-            height: 32,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
+              color: const Color.fromARGB(255, 201, 171, 233),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
@@ -321,9 +325,9 @@ String _getNetworkImage(String network) {
           // 📍 Thinner & Shorter Vertical Line (⅔ of sphere’s diameter)
           Container(
             width: 2, // Made thinner
-            height: 21, // ⅔ of 32px diameter
+            height: 17, // ⅔ of 32px diameter
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 247, 133, 133).withOpacity(0.9),
+              color: const Color.fromARGB(255, 201, 171, 233),
               borderRadius: BorderRadius.circular(1),
             ),
           ),

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../platform_model.dart';
+import '../database/db.dart';
 import 'platform_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
+  final AppDatabase database;
+
+  const SearchScreen({Key? key, required this.database}) : super(key: key);
+
   @override
   _SearchScreenState createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  late Box<PlatformModel> _platformBox;
-  List<PlatformModel> filteredPlatforms = [];
+  late AppDatabase _db;
+  List<PlatformEntity> filteredPlatforms = [];
   TextEditingController searchController = TextEditingController();
   bool _isFetching = true;
   String _errorMessage = '';
@@ -20,58 +23,24 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeBox();
-  }
-
-  void _filterPlatforms() {
-    String query = searchController.text.toLowerCase();
-    setState(() {
-      filteredPlatforms = _platformBox.values.where((platform) {
-        return platform.reference.toLowerCase().contains(query) ||
-               platform.model.toLowerCase().contains(query) ||
-               platform.network.toLowerCase().contains(query) ||
-               platform.status.toLowerCase().contains(query);
-      }).toList();
-    });
-  }
-
-  void _addDummyPlatforms() {
-    setState(() {
-      filteredPlatforms = _platformBox.values.toList();
-    });
-  }
-
-  Future<void> _initializeBox() async {
-    await Hive.deleteBoxFromDisk('platforms'); // ✅ Reset Hive to remove corrupted data
-    _platformBox = await Hive.openBox<PlatformModel>('platforms');
-    setState(() {}); // Met à jour l'interface
-    await _fetchPlatformData();
-    filteredPlatforms = _platformBox.values.toList();
+    _db = widget.database;
     searchController.addListener(_filterPlatforms);
-    setState(() {
-      filteredPlatforms = _platformBox.values.toList();
-    });
+    _fetchPlatformData();
   }
 
   Future<void> _fetchPlatformData() async {
+    setState(() {
+      _isFetching = true;
+      _errorMessage = '';
+    });
+
     try {
       String formattedDate = DateTime.now().toUtc().subtract(Duration(days: 180)).toString().split('.')[0];
 
       Uri apiUrl = Uri.parse("https://www.ocean-ops.org/api/1/data/platform/").replace(
         queryParameters: {
-          "exp": jsonEncode([
-            "ptfStatus.name in ('INACTIVE','CLOSED','OPERATIONAL') and latestObs.obsDate>'$formattedDate'"
-          ]),
-          "include": jsonEncode([
-            "ref",
-            "latestObs.lat",
-            "latestObs.lon",
-            "latestObs.obsDate",
-            "ptfStatus.name",
-            "ptfDepl.deplDate",
-            "ptfModel.name",
-            "ptfModel.network.name"
-          ])
+          "exp": jsonEncode(["ptfStatus.name in ('INACTIVE','CLOSED','OPERATIONAL') and latestObs.obsDate>'$formattedDate'"]),
+          "include": jsonEncode(["ref", "latestObs.lat", "latestObs.lon", "latestObs.obsDate", "ptfStatus.name", "ptfDepl.deplDate", "ptfModel.name", "ptfModel.network.name"])
         },
       );
 
@@ -81,17 +50,16 @@ class _SearchScreenState extends State<SearchScreen> {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
         List<dynamic> platformsData = jsonResponse['data'];
 
-        await _platformBox.clear(); // ✅ Clear old data
+        await _db.clearPlatforms(); // ✅ Clear old data before inserting
 
         for (var platformJson in platformsData) {
-          var platform = PlatformModel.fromJson(platformJson);
-          _platformBox.add(platform);
+          var platform = platformFromJson(platformJson);
+          await _db.insertPlatform(platform);
         }
 
         setState(() {
           _isFetching = false;
         });
-
       } else {
         setState(() {
           _errorMessage = 'Failed to load data (Status ${response.statusCode})';
@@ -106,19 +74,30 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  // 🔹 Nouvelle méthode : Ouvrir les détails de la plateforme
-  void _openPlatformDetails(PlatformModel platform) {
-    print("Clicked on ${platform.reference}");
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform)),
-    // );
+  void _filterPlatforms() async {
+    String query = searchController.text.toLowerCase();
+    List<PlatformEntity> results = await _db.searchPlatforms(query);
+
+    setState(() {
+      filteredPlatforms = results;
+    });
   }
 
-  void _toggleFavorite(PlatformModel platform) {
+  void _openPlatformDetails(PlatformEntity platform) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform)),
+    );
+  }
+
+  void _toggleFavorite(PlatformEntity platform) async {
+    final updatedPlatform = platform.copyWith(isFavorite: !platform.isFavorite);
+    await _db.toggleFavorite(platform.reference, updatedPlatform.isFavorite);
+
     setState(() {
-      platform.isFavorite = !platform.isFavorite;
-      platform.save(); // Sauvegarde la modification dans Hive
+      filteredPlatforms = filteredPlatforms.map((p) {
+        return p.reference == platform.reference ? updatedPlatform : p;
+      }).toList();
     });
   }
 
@@ -131,11 +110,9 @@ class _SearchScreenState extends State<SearchScreen> {
       'oceangliders': 'assets/images/glider.png',
       'anibos': 'assets/images/anibos.png',
     };
-
     return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
   }
 
-  // Fonction pour obtenir la couleur du statut
   Color _getStatusColor(String status) {
     switch (status) {
       case "OPERATIONAL":
@@ -153,107 +130,96 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Widget _buildPlatformCard(PlatformModel platform) {
-    return GestureDetector( // Ajout du clic
-      onTap: () => _openPlatformDetails(platform), // 🔹 Navigue vers les détails
+  Widget _buildPlatformCard(PlatformEntity platform) {
+    return GestureDetector(
+      onTap: () => _openPlatformDetails(platform),
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: 4,
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Padding(
           padding: EdgeInsets.all(12),
-          child: Row( // Utilisation d'un Row pour aligner l'image et le texte
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 🔹 Image à gauche
               ClipRRect(
-                borderRadius: BorderRadius.circular(10), // Arrondi pour un look moderne
+                borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
-                  _getNetworkImage(platform.network), // Chemin du fichier local
+                  _getNetworkImage(platform.network),
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
                 ),
               ),
-              SizedBox(width: 12), // Espace entre l'image et le texte
-              
+              SizedBox(width: 12),
               Expanded(
-              child: Column(
-                // crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 🔹 Nom + Favoris bien alignés
-                  Row(
-                    // mainAxisSize: MainAxisSize.min, // Ajouté pour éviter que l'icône prenne trop d'espace
-                    children: [
-                      GestureDetector(
-                        onTap: () => _toggleFavorite(platform),
-                        child: Icon(
-                          platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: platform.isFavorite ? Colors.red : Colors.grey,
-                          size: 26,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _toggleFavorite(platform),
+                          child: Icon(
+                            platform.isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: platform.isFavorite ? Colors.red : Colors.grey,
+                            size: 26,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          platform.reference,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            platform.reference,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on, color: Colors.redAccent, size: 20),
+                        SizedBox(width: 6),
+                        Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.wifi, color: Colors.blueAccent, size: 20),
+                        SizedBox(width: 6),
+                        Text(
+                          platform.network,
+                          style: TextStyle(fontSize: 14),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-
-                  // 🔹 Localisation avec icône
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, color: Colors.redAccent, size: 20),
-                      SizedBox(width: 6),
-                      Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                    ],
-                  ),
-                  SizedBox(height: 6),
-                  
-                  Row(
-                    children: [
-                      Icon(Icons.wifi, color: Colors.blueAccent, size: 20),
-                      SizedBox(width: 6),
-                      Text(
-                        platform.network, 
-                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 6),
-                  
-                  Row(
-                    children: [
-                      Icon(Icons.branding_watermark, color: Colors.orange, size: 20),
-                      SizedBox(width: 6),
-                      Text(
-                        platform.model, 
-                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    ],
-                  ),
-                  // SizedBox(height: 6),
+                      ],
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.branding_watermark, color: Colors.orange, size: 20),
+                        SizedBox(width: 6),
+                        Text(
+                          platform.model,
+                          style: TextStyle(fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(height: 50),
+                  _buildStatusBadge(platform.status),
                 ],
               ),
-              ),
-              // ✅ Statut bien aligné en bas à droite
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(height: 50), // 🔹 Pousse le statut vers le bas
-                _buildStatusBadge(platform.status),
-              ],
-            ),
             ],
           ),
         ),
@@ -261,25 +227,23 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // 🔹 Badge de statut
   Widget _buildStatusBadge(String status) {
     return Container(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: _getStatusColor(status),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          status,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      );
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _getStatusColor(status),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Search platforms")),
       body: Column(
         children: [
           Padding(
@@ -294,54 +258,13 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           Expanded(
-            child: ValueListenableBuilder(
-              valueListenable: _platformBox.listenable(),
-              builder: (context, Box<PlatformModel> box, _) {
-                final platforms = searchController.text.isEmpty
-                    ? box.values.toList()
-                    : filteredPlatforms;
-                return ListView.builder(
-                  itemCount: platforms.length,
-                  itemBuilder: (context, index) {
-                    return _buildPlatformCard(platforms[index]);
-                  },
-                );
-              },
+            child: ListView.builder(
+              itemCount: filteredPlatforms.length,
+              itemBuilder: (context, index) => _buildPlatformCard(filteredPlatforms[index]),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-// ✅ Custom DataSource for Lazy Loading
-class _PlatformDataSource extends DataTableSource {
-  final Box<PlatformModel> _box;
-
-  _PlatformDataSource(this._box);
-
-  @override
-  DataRow getRow(int index) {
-    if (index >= _box.length) return DataRow(cells: []);
-
-    final platform = _box.getAt(index);
-    return DataRow(cells: [
-      DataCell(Text(platform?.reference ?? '')),
-      DataCell(Text(platform?.latitude.toStringAsFixed(2) ?? '')),
-      DataCell(Text(platform?.longitude.toStringAsFixed(2) ?? '')),
-      DataCell(Text(platform?.status ?? '')),
-      DataCell(Text(platform?.model ?? '')),
-      DataCell(Text(platform?.network ?? '')),
-    ]);
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get rowCount => _box.length;
-
-  @override
-  int get selectedRowCount => 0;
 }

@@ -1,72 +1,118 @@
 import 'package:flutter/material.dart';
-import '../platform_model.dart';
+import '../database/db.dart'; // ✅ Import Drift database
 
 class PlatformDetailScreen extends StatelessWidget {
-  final PlatformModel platform;
+  final PlatformEntity platform; // ✅ Use PlatformEntity from Drift
 
   const PlatformDetailScreen({Key? key, required this.platform}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      appBar: AppBar(title: Text(platform.reference)),
+      appBar: AppBar(
+        title: Text(
+          platform.reference,
+          style: textTheme.titleLarge, // ✅ Material 3 typography
+        ),
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+      ),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 Titre avec icône
-            Row(
-              children: [
-                Icon(Icons.storage, color: Colors.blueAccent, size: 30),
-                SizedBox(width: 10),
-                Text(
+            // 🔹 Platform Reference
+            Card(
+              elevation: 2,
+              color: colorScheme.surfaceVariant,
+              child: ListTile(
+                leading: Icon(Icons.storage, color: colorScheme.primary),
+                title: Text(
                   platform.reference,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: textTheme.headlineSmall,
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-            // 🔹 Localisation
-            Row(
-              children: [
-                Icon(Icons.location_on, color: Colors.redAccent),
-                SizedBox(width: 8),
-                Text(
-                  "Localisation : ${platform.latitude};${platform.longitude}",
-                  style: TextStyle(fontSize: 16, color: Colors.black87),
+            // 🔹 Location
+            Card(
+              elevation: 1,
+              color: colorScheme.surfaceVariant,
+              child: ListTile(
+                leading: Icon(Icons.location_on, color: colorScheme.error),
+                title: Text("Location", style: textTheme.titleMedium),
+                subtitle: Text(
+                  "${platform.latitude}; ${platform.longitude}",
+                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-            // 🔹 Statut avec badge coloré
-            Row(
-              children: [
-                Icon(Icons.check_circle, color: platform.status == "Active" ? Colors.green : Colors.red),
-                SizedBox(width: 8),
-                Text(
-                  "Statut : ${platform.status}",
-                  style: TextStyle(
-                    fontSize: 16,
+            // 🔹 Status with Color Indicator
+            Card(
+              elevation: 1,
+              color: colorScheme.surfaceVariant,
+              child: ListTile(
+                leading: Icon(
+                  Icons.check_circle,
+                  color: platform.status == "Active" ? colorScheme.primary : colorScheme.error,
+                ),
+                title: Text("Status", style: textTheme.titleMedium),
+                subtitle: Text(
+                  platform.status,
+                  style: textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: platform.status == "Active" ? Colors.green : Colors.red,
+                    color: platform.status == "Active" ? colorScheme.primary : colorScheme.error,
                   ),
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-            // 🔹 Description
-            Text(
-              "Network :",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            // 🔹 Network Information
+            Card(
+              elevation: 1,
+              color: colorScheme.surfaceVariant,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Network:", style: textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      platform.network,
+                      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 6),
-            Text(
-              platform.network,
-              style: TextStyle(fontSize: 16, color: Colors.black87),
+            const SizedBox(height: 20),
+
+            // 🔹 Action Button
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: Icon(Icons.edit),
+                label: Text("Edit Platform"),
+                onPressed: () {
+                  print("Edit button clicked!");
+                },
+              ),
             ),
           ],
         ),
