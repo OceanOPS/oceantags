@@ -104,11 +104,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _isLocationLoaded = true;
     });
 
-    // override for demo !!!
-    setState(() {
-      _currentLocation = LatLng(42.7, 3.25);
-      _isLocationLoaded = true;
-    });
   }
 
   /// ✅ Assign different colors based on status
@@ -126,10 +121,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
 List<Widget> _buildRegularPlatformMarker(PlatformEntity platform) {
+  double zoomLevel = 9.0; // Default zoom level
+  try {
+    zoomLevel = _mapController.camera.zoom; // ✅ Get current zoom
+  } catch (e) {
+    print("⚠️ _mapController.zoom not ready yet: $e");
+  }
+
+  // ✅ Scale dot size dynamically (min 4px, max 12px)
+  double size = zoomLevel >= 10 ? 12 : (zoomLevel * 1.2).clamp(4, 12);
+
   return [
     Container(
-      width: 12,
-      height: 12,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: _getPlatformColor(platform.status), // ✅ Uses Drift model
@@ -137,6 +142,7 @@ List<Widget> _buildRegularPlatformMarker(PlatformEntity platform) {
     ),
   ];
 }
+
 
 List<Widget> _buildHighlightedPlatformMarker(PlatformEntity platform) {
   return [
@@ -193,7 +199,6 @@ String _getNetworkImage(String network) {
   return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
 }
 
-
   List<Marker> _platformMarkers() {
     if (_platforms.isEmpty) return [];
 
@@ -204,7 +209,7 @@ String _getNetworkImage(String network) {
       print("⚠️ _mapController.zoom not ready yet: $e");
     }
 
-    bool showHighlighted = zoomLevel >= 9; // ✅ Show highlighted markers at zoom 10+
+    bool showHighlighted = zoomLevel >= 7; // ✅ Show highlighted markers at zoom 10+
 
      return _platforms.map((platform) {
       return Marker(
@@ -268,84 +273,126 @@ String _getNetworkImage(String network) {
   Marker? _currentLocationMarker() {
     if (_currentLocation == null) return null;
 
+    double zoomLevel = 9.0; // Default zoom level
+    try {
+      zoomLevel = _mapController.camera.zoom; // ✅ Get current zoom
+    } catch (e) {
+      print("⚠️ _mapController.zoom not ready yet: $e");
+    }
+
+    bool showFullPin = zoomLevel >= 8; // ✅ Show full pin only if zoom ≥ 8
+
     return Marker(
-      width: 50,
-      height: 80,
+      width: showFullPin ? 50 : 12,
+      height: showFullPin ? 88 : 12,
       point: _currentLocation!,
-      child: Column(
-        children: [
-          // 🎯 Round Pink Sphere with Reflection Effect
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color.fromARGB(255, 201, 171, 233),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Stack(
+      child: showFullPin
+          ? Stack(
+              alignment: Alignment.center,
               children: [
-                // ✨ Oval White Reflection (Moved to Top Left)
-                Positioned(
-                  top: 6,
-                  left: 6,
-                  child: Container(
-                    width: 10,
-                    height: 7, 
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.6), 
-                    ),
-                  ),
-                ),
-
-                // ✨ Soft Glow Reflection
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: Container(
-                    width: 16,
-                    height: 10, 
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.2), 
-                    ),
-                  ),
-                ),
+                if (_selectedPlatform == null || _selectedPlatform == _currentLocationPlatform())
+                  _pulsingSelectedMarker(), // ✅ Default selection is user's location
+                _build3DPin(), // ✅ Original pink sphere + line
               ],
-            ),
-          ),
+            )
+          : _buildSmallDot(), // ✅ Switch to small dot when zoomed out
+    );
+  }
 
-          // 📍 Thinner & Shorter Vertical Line (⅔ of sphere’s diameter)
-          Container(
-            width: 2,
-            height: 17,
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 201, 171, 233),
-              borderRadius: BorderRadius.circular(1),
-            ),
-          ),
+  /// ✅ **User's Location is a Default "Platform"**
+  PlatformEntity _currentLocationPlatform() {
+    return PlatformEntity(
+      reference: "User Location",
+      latitude: _currentLocation!.latitude,
+      longitude: _currentLocation!.longitude,
+      status: "Active",
+      model: "GPS",
+      network: "Self",
+      isFavorite: false,
+    );
+  }
 
-          // ⚫ Small Black Oval (3D Hole Effect)
-          Container(
-            width: 8,
-            height: 3, 
-            decoration: BoxDecoration(
-              shape: BoxShape.rectangle,
-              color: Colors.black.withOpacity(0.7), 
-              borderRadius: BorderRadius.circular(2), 
-            ),
+  /// ✅ **Original Pink Sphere & Line**
+  Widget _build3DPin() {
+    return Column(
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color.fromARGB(255, 201, 171, 233),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
-        ],
+          child: Stack(
+            children: [
+              Positioned(
+                top: 6,
+                left: 6,
+                child: Container(
+                  width: 10,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.6),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Container(
+                  width: 16,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: 2,
+          height: 17,
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 201, 171, 233),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+        Container(
+          width: 8,
+          height: 3,
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            color: Colors.black.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// ✅ **Small Dot for Low Zoom Levels**
+  Widget _buildSmallDot() {
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color.fromARGB(255, 201, 171, 233), // Same color as pin
       ),
     );
   }
+
+
 
   Widget _buildBottomPanel() {
     if (_selectedPlatform == null) return SizedBox.shrink();
@@ -406,8 +453,6 @@ String _getNetworkImage(String network) {
       },
     );
   }
-
-
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
@@ -628,7 +673,7 @@ String _getNetworkImage(String network) {
     );
   }
 
-    /// ✅ **Reusable M3 Menu Button**
+  /// ✅ **Reusable M3 Menu Button**
   Widget _buildMenuItem(IconData icon, String tooltip, VoidCallback onPressed) {
     return Padding(
       padding: EdgeInsets.only(top: 10),

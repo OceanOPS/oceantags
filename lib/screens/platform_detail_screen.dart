@@ -16,25 +16,22 @@ class PlatformDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          platform.reference,
-          style: textTheme.titleLarge,
-        ),
+        title: Text(platform.reference, style: textTheme.titleLarge),
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
       ),
       body: Column(
         children: [
-          // 🔹 Small Map at the Top
-          Container(
-            height: 200,
-            width: double.infinity,
-            child: ClipRRect(
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)), // ✅ Rounded corners
+          // 🔹 Interactive Map Section
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)), // ✅ Rounded bottom corners
+            child: SizedBox(
+              height: 200,
+              width: double.infinity,
               child: FlutterMap(
                 options: MapOptions(
                   initialCenter: LatLng(platform.latitude, platform.longitude),
-                  initialZoom: 5.0, // ✅ Adjust zoom level
+                  initialZoom: 5.0, // ✅ Adjust initial zoom
                 ),
                 children: [
                   TileLayer(
@@ -54,68 +51,55 @@ class PlatformDetailScreen extends StatelessWidget {
             ),
           ),
 
-          // 🔹 Details Below Map
+          // 🔹 Platform Details (Inside a Card)
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: ListView(
-                children: [
-                  _buildDetailCard(
-                    icon: Icons.storage,
-                    title: "Reference",
-                    value: platform.reference,
-                    color: colorScheme.primary,
-                    textTheme: textTheme,
-                  ),
-                  _buildDetailCard(
-                    icon: Icons.location_on,
-                    title: "Location",
-                    value: "${platform.latitude}, ${platform.longitude}",
-                    color: Colors.redAccent,
-                    textTheme: textTheme,
-                  ),
-                  _buildDetailCard(
-                    icon: Icons.check_circle,
-                    title: "Status",
-                    value: platform.status,
-                    color: platform.status == "Active" ? colorScheme.primary : Colors.red,
-                    textTheme: textTheme,
-                  ),
-                  _buildDetailCard(
-                    icon: Icons.wifi,
-                    title: "Network",
-                    value: platform.network,
-                    color: Colors.blueAccent,
-                    textTheme: textTheme,
-                  ),
-                  _buildDetailCard(
-                    icon: Icons.devices_other,
-                    title: "Model",
-                    value: platform.model,
-                    color: Colors.orange,
-                    textTheme: textTheme,
-                  ),
+              child: Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: colorScheme.surfaceVariant,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text("Platform Details", style: textTheme.titleLarge),
+                      ),
+                      const SizedBox(height: 10),
+                      Divider(color: colorScheme.primary), // ✅ Themed divider
 
-                  const SizedBox(height: 20),
+                      // 🔹 Details List
+                      _buildInfoRow(context, Icons.storage, "Reference", platform.reference, colorScheme.primary),
+                      _buildInfoRow(context, Icons.location_on, "Location", "${platform.latitude}, ${platform.longitude}", Colors.redAccent),
+                      _buildInfoRow(context, Icons.check_circle, "Status", platform.status, 
+                        platform.status == "Active" ? colorScheme.primary : Colors.red),
+                      _buildInfoRow(context, Icons.wifi, "Network", platform.network, Colors.blueAccent),
+                      _buildInfoRow(context, Icons.devices_other, "Model", platform.model, Colors.orange),
 
-                  // 🔹 Edit Button
-                  Center(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 20),
+
+                      // 🔹 Edit Button
+                      Center(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: Icon(Icons.edit),
+                          label: Text("Edit Platform"),
+                          onPressed: () {
+                            print("Edit button clicked!");
+                          },
                         ),
                       ),
-                      icon: Icon(Icons.edit),
-                      label: Text("Edit Platform"),
-                      onPressed: () {
-                        print("Edit button clicked!");
-                      },
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -123,24 +107,25 @@ class PlatformDetailScreen extends StatelessWidget {
       ),
     );
   }
-
-  /// 🔹 Reusable Detail Card Widget
-  Widget _buildDetailCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-    required TextTheme textTheme,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // ✅ Soft rounded corners
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ListTile(
-        leading: Icon(icon, color: color),
-        title: Text(title, style: textTheme.titleMedium),
-        subtitle: Text(value, style: textTheme.bodyMedium),
+  Widget _buildInfoRow(BuildContext context, IconData icon, String title, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                Text(value, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
 }
