@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../database/db.dart';
 
 class PlatformDetailScreen extends StatelessWidget {
@@ -21,101 +23,123 @@ class PlatformDetailScreen extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔹 Platform Reference
-            Card(
-              elevation: 2,
-              color: colorScheme.surfaceVariant,
-              child: ListTile(
-                leading: Icon(Icons.storage, color: colorScheme.primary),
-                title: Text(
-                  platform.reference,
-                  style: textTheme.headlineSmall,
+      body: Column(
+        children: [
+          // 🔹 Small Map at the Top
+          Container(
+            height: 200,
+            width: double.infinity,
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)), // ✅ Rounded corners
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(platform.latitude, platform.longitude),
+                  initialZoom: 5.0, // ✅ Adjust zoom level
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 🔹 Location
-            Card(
-              elevation: 1,
-              color: colorScheme.surfaceVariant,
-              child: ListTile(
-                leading: Icon(Icons.location_on, color: colorScheme.error),
-                title: Text("Location", style: textTheme.titleMedium),
-                subtitle: Text(
-                  "${platform.latitude}; ${platform.longitude}",
-                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // 🔹 Status with Color Indicator
-            Card(
-              elevation: 1,
-              color: colorScheme.surfaceVariant,
-              child: ListTile(
-                leading: Icon(
-                  Icons.check_circle,
-                  color: platform.status == "Active" ? colorScheme.primary : colorScheme.error,
-                ),
-                title: Text("Status", style: textTheme.titleMedium),
-                subtitle: Text(
-                  platform.status,
-                  style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: platform.status == "Active" ? colorScheme.primary : colorScheme.error,
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c'],
                   ),
-                ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(platform.latitude, platform.longitude),
+                        child: Icon(Icons.location_on, color: Colors.red, size: 30),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
+          ),
 
-            // 🔹 Network Information
-            Card(
-              elevation: 1,
-              color: colorScheme.surfaceVariant,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Network:", style: textTheme.titleMedium),
-                    const SizedBox(height: 6),
-                    Text(
-                      platform.network,
-                      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+          // 🔹 Details Below Map
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView(
+                children: [
+                  _buildDetailCard(
+                    icon: Icons.storage,
+                    title: "Reference",
+                    value: platform.reference,
+                    color: colorScheme.primary,
+                    textTheme: textTheme,
+                  ),
+                  _buildDetailCard(
+                    icon: Icons.location_on,
+                    title: "Location",
+                    value: "${platform.latitude}, ${platform.longitude}",
+                    color: Colors.redAccent,
+                    textTheme: textTheme,
+                  ),
+                  _buildDetailCard(
+                    icon: Icons.check_circle,
+                    title: "Status",
+                    value: platform.status,
+                    color: platform.status == "Active" ? colorScheme.primary : Colors.red,
+                    textTheme: textTheme,
+                  ),
+                  _buildDetailCard(
+                    icon: Icons.wifi,
+                    title: "Network",
+                    value: platform.network,
+                    color: Colors.blueAccent,
+                    textTheme: textTheme,
+                  ),
+                  _buildDetailCard(
+                    icon: Icons.devices_other,
+                    title: "Model",
+                    value: platform.model,
+                    color: Colors.orange,
+                    textTheme: textTheme,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 🔹 Edit Button
+                  Center(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: Icon(Icons.edit),
+                      label: Text("Edit Platform"),
+                      onPressed: () {
+                        print("Edit button clicked!");
+                      },
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // 🔹 Action Button
-            Center(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                icon: Icon(Icons.edit),
-                label: Text("Edit Platform"),
-                onPressed: () {
-                  print("Edit button clicked!");
-                },
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 🔹 Reusable Detail Card Widget
+  Widget _buildDetailCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+    required TextTheme textTheme,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // ✅ Soft rounded corners
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(title, style: textTheme.titleMedium),
+        subtitle: Text(value, style: textTheme.bodyMedium),
       ),
     );
   }

@@ -41,7 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
       Uri apiUrl = Uri.parse("https://www.ocean-ops.org/api/1/data/platform/").replace(
         queryParameters: {
           "exp": jsonEncode(["ptfStatus.name in ('INACTIVE','CLOSED','OPERATIONAL') and latestObs.obsDate>'$formattedDate'"]),
-          "include": jsonEncode(["ref", "latestObs.lat", "latestObs.lon", "latestObs.obsDate", "ptfStatus.name", "ptfDepl.deplDate", "ptfModel.name", "ptfModel.network.name"])
+          "include": jsonEncode(["ref", "latestObs.lat", "latestObs.lon", "latestObs.obsDate", "ptfLocations","ptfStatus.name", "ptfDepl.deplDate", "ptfModel.name", "ptfModel.network.name"])
         },
       );
 
@@ -54,6 +54,7 @@ class _SearchScreenState extends State<SearchScreen> {
         await _db.clearPlatforms(); // ✅ Clear old data before inserting
 
         for (var platformJson in platformsData) {
+          print(platformJson.toString());
           var platform = platformFromJson(platformJson);
           await _db.insertPlatform(platform);
         }
