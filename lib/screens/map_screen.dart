@@ -235,7 +235,7 @@ String _getNetworkImage(String network) {
       animation: _pulseController,
       builder: (context, child) {
         return Container(
-          width: _pulseController.value * 40, // Adjust size dynamically
+          width: _pulseController.value * 40,
           height: _pulseController.value * 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -257,7 +257,7 @@ String _getNetworkImage(String network) {
     child: Stack(
       alignment: Alignment.center,
       children: [
-        _pulsingSelectedMarker(), // ✅ Pulsing blue effect
+        _pulsingSelectedMarker(),
       ],
     ),
   );
@@ -270,7 +270,7 @@ String _getNetworkImage(String network) {
 
     return Marker(
       width: 50,
-      height: 80, // Adjusted height for pin + line
+      height: 80,
       point: _currentLocation!,
       child: Column(
         children: [
@@ -297,10 +297,10 @@ String _getNetworkImage(String network) {
                   left: 6,
                   child: Container(
                     width: 10,
-                    height: 7, // Slightly oval for realism
+                    height: 7, 
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.6), // Semi-transparent for reflection
+                      color: Colors.white.withOpacity(0.6), 
                     ),
                   ),
                 ),
@@ -311,10 +311,10 @@ String _getNetworkImage(String network) {
                   left: 4,
                   child: Container(
                     width: 16,
-                    height: 10, // Larger and diffused
+                    height: 10, 
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.2), // Fainter outer glow
+                      color: Colors.white.withOpacity(0.2), 
                     ),
                   ),
                 ),
@@ -324,8 +324,8 @@ String _getNetworkImage(String network) {
 
           // 📍 Thinner & Shorter Vertical Line (⅔ of sphere’s diameter)
           Container(
-            width: 2, // Made thinner
-            height: 17, // ⅔ of 32px diameter
+            width: 2,
+            height: 17,
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 201, 171, 233),
               borderRadius: BorderRadius.circular(1),
@@ -334,12 +334,12 @@ String _getNetworkImage(String network) {
 
           // ⚫ Small Black Oval (3D Hole Effect)
           Container(
-            width: 8, // Wider than tall for an oval effect
-            height: 3, // Very thin
+            width: 8,
+            height: 3, 
             decoration: BoxDecoration(
               shape: BoxShape.rectangle,
-              color: Colors.black.withOpacity(0.7), // Slight transparency for depth effect
-              borderRadius: BorderRadius.circular(2), // Slight rounding for realism
+              color: Colors.black.withOpacity(0.7), 
+              borderRadius: BorderRadius.circular(2), 
             ),
           ),
         ],
@@ -347,66 +347,66 @@ String _getNetworkImage(String network) {
     );
   }
 
+  Widget _buildBottomPanel() {
+    if (_selectedPlatform == null) return SizedBox.shrink();
 
-
-Widget _buildBottomPanel() {
-  if (_selectedPlatform == null) return SizedBox.shrink();
-
-  return DraggableScrollableSheet(
-    initialChildSize: 0.4, // Default height (30% of screen)
-    minChildSize: 0.2, // Minimum height when collapsed
-    maxChildSize: 0.9, // Maximum height when expanded
-    builder: (context, scrollController) {
-      return Container(
-        padding: EdgeInsets.all(12),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.9),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: () {}, // Placeholder for potential tap interaction
-              child: Container(
-                width: 50,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  borderRadius: BorderRadius.circular(3),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.3,
+      minChildSize: 0.2,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Card(
+          elevation: 3,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+          child: Padding(
+            padding: EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      Align( 
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: 60, 
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Center(
+                        child: Text(
+                          "Platform Details",
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      Divider(color: Theme.of(context).colorScheme.primary),
+                      _buildInfoRow("Reference", _selectedPlatform!.reference),
+                      _buildInfoRow("Model", _selectedPlatform!.model),
+                      _buildInfoRow("Network", _selectedPlatform!.network),
+                      _buildInfoRow("Status", _selectedPlatform!.status),
+                      _buildInfoRow("Latitude", _selectedPlatform!.latitude.toString()),
+                      _buildInfoRow("Longitude", _selectedPlatform!.longitude.toString()),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-            SizedBox(height: 10),
-            Text(
-              "Platform Details",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Divider(color: Theme.of(context).colorScheme.primary),
-            Expanded(
-              child: ListView(
-                controller: scrollController, // Enable scrolling when expanded
-                children: [
-                  _buildInfoRow("Reference", _selectedPlatform!.reference),
-                  _buildInfoRow("Model", _selectedPlatform!.model),
-                  _buildInfoRow("Network", _selectedPlatform!.network),
-                  _buildInfoRow("Status", _selectedPlatform!.status),
-                  _buildInfoRow("Latitude", _selectedPlatform!.latitude.toString()),
-                  _buildInfoRow("Longitude", _selectedPlatform!.longitude.toString()),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+          ),
+        );
+      },
+    );
+  }
+
 
 
   Widget _buildInfoRow(String label, String value) {
@@ -415,8 +415,8 @@ Widget _buildBottomPanel() {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 16)),
-          Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(label, style: Theme.of(context).textTheme.bodyLarge),
+          Text(value, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -530,6 +530,35 @@ Widget _buildBottomPanel() {
     loadingStrategy: BrowseLoadingStrategy.cacheFirst,
   );
 
+  /// ✅ **M3-Style Floating Menu**
+  Widget _buildMenu() {
+    return AnimatedPositioned(
+      duration: Duration(milliseconds: 200),
+      top: _menuExpanded ? 28 : 18,
+      right: 14,
+      child: Column(
+        children: [
+          FloatingActionButton(
+            heroTag: "menuButton",
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            elevation: 4,
+            onPressed: () {
+              setState(() => _menuExpanded = !_menuExpanded);
+            },
+            child: Icon(Icons.tune_rounded, size: 40),
+          ),
+          if (_menuExpanded) ...[
+            _buildMenuItem(Icons.download, "Download Map", _downloadDisplayedRegion),
+            _buildMenuItem(Icons.explore, "Reset North", _resetToNorth),
+            _buildMenuItem(Icons.my_location, "Recenter", _recenterOnUser),
+          ],
+        ],
+      ),
+    );
+  }
+  
+
   @override
   Widget build(BuildContext context) {
 
@@ -587,49 +616,31 @@ Widget _buildBottomPanel() {
                     ),
                   ),
 
-                // ✅ Settings Map Button 
-                Positioned(
-                  top: 20, // Adjust base position
-                  right: 14,
-                  child: FloatingActionButton(
-                    heroTag: "menuButton",
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer, // ✅ Background from theme
-                    foregroundColor: Theme.of(context).colorScheme.primary, 
-                    elevation: 4,
-                    onPressed: _toggleMenu, // ✅ Open or close menu
-                    child: Icon(Icons.tune_rounded, size: 40), // ✅ Bigger Icon
-                  ),
-                ),
+                  
+              // ✅ Floating M3 Menu Button
+              _buildMenu(),
 
-                // ✅ Dropdown Menu Items (Shown when menu is expanded)
-                if (_menuExpanded) ...[
-                  _buildMenuItem(214, Icons.download, "Bulk Download", _downloadDisplayedRegion),
-                  _buildMenuItem(150, Icons.explore, "Reset North", _resetToNorth),
-                  _buildMenuItem(86, Icons.my_location, "Recenter", _recenterOnUser),
-      
-          _buildBottomPanel(),
-                ]
+              // ✅ M3 Adaptive Bottom Panel
+              _buildBottomPanel(),
+                
         ],
       ),
     );
   }
 
-
-  // 🔹 Menu Item Builder (Reusable for each option)
-  Widget _buildMenuItem(double top, IconData icon, String tooltip, VoidCallback onPressed) {
-    return Positioned(
-      top: top,
-      right: 14,
-      child: FloatingActionButton(
-        heroTag: tooltip, // Unique identifier
+    /// ✅ **Reusable M3 Menu Button**
+  Widget _buildMenuItem(IconData icon, String tooltip, VoidCallback onPressed) {
+    return Padding(
+      padding: EdgeInsets.only(top: 10),
+      child: FloatingActionButton.small(
+        heroTag: tooltip,
         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-        elevation: 3,
         onPressed: () {
-          setState(() => _menuExpanded = false); // ✅ Close menu when pressed
+          setState(() => _menuExpanded = false);
           onPressed();
         },
         tooltip: tooltip,
-        child: Icon(icon, size: 34, color: Theme.of(context).colorScheme.secondary), // ✅ Bigger Icon
+        child: Icon(icon, size: 24, color: Theme.of(context).colorScheme.secondary),
       ),
     );
   }
