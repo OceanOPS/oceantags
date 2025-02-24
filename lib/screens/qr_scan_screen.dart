@@ -3,10 +3,18 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:oceantags/database/db.dart';
 import 'platform_detail_screen.dart';
 
-class QRScanScreen extends StatelessWidget {
+class QRScanScreen extends StatefulWidget {
   final AppDatabase database;
 
   const QRScanScreen({Key? key, required this.database}) : super(key: key);
+
+  @override
+  _QRScanScreenState createState() => _QRScanScreenState();
+}
+
+class _QRScanScreenState extends State<QRScanScreen> {
+  final MobileScannerController _scannerController = MobileScannerController();
+  bool _isModalOpen = false; // ✅ Track if modal is open
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +23,10 @@ class QRScanScreen extends StatelessWidget {
       body: Stack(
         children: [
           MobileScanner(
+            controller: _scannerController, // ✅ Control scanner state
             onDetect: (BarcodeCapture capture) async {
+              if (_isModalOpen) return; // ✅ Prevent multiple modals
+
               final List<Barcode> barcodes = capture.barcodes;
               for (final barcode in barcodes) {
                 final String? code = barcode.rawValue;
@@ -53,15 +64,21 @@ class QRScanScreen extends StatelessWidget {
 
   /// ✅ Searches database for platform & navigates if found
   Future<void> _searchAndNavigate(String reference, BuildContext context) async {
-    final platform = await database.getPlatformByReference(reference); // ✅ Search database
+    _scannerController.stop(); // ✅ Stop scanning while modal is open
+    _isModalOpen = true; // ✅ Set modal state to open
+
+    final platform = await widget.database.getPlatformByReference(reference);
     if (platform != null) {
-      Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform)),
       );
     } else {
       _showMessage(context, "Platform not found");
     }
+
+    _isModalOpen = false; // ✅ Reset modal state
+    _scannerController.start(); // ✅ Resume scanning
   }
 
   /// ✅ Displays a message using Snackbar
@@ -69,6 +86,12 @@ class QRScanScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  @override
+  void dispose() {
+    _scannerController.dispose(); // ✅ Clean up scanner when screen is closed
+    super.dispose();
   }
 }
 
