@@ -131,6 +131,66 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  Widget _buildPlatformList(PlatformEntity platform) {
+    return Column(
+      children: [
+        ListTile(
+          leading: Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  _getNetworkImage(platform.network),
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 2,
+                left: 2,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(platform.status),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          title: Text(
+            platform.reference,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+          ),
+          subtitle: Text(
+            platform.model,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontFamily: 'Roboto', 
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+          trailing: GestureDetector(
+            onTap: () => _toggleFavorite(platform),
+            child: Icon(
+              platform.isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: platform.isFavorite ? Colors.red : Colors.grey,
+            ),
+          ),
+          onTap: () => _openPlatformDetails(platform),
+        ),
+        Divider(),
+      ],
+    );
+  }
+
   Widget _buildPlatformCard(PlatformEntity platform) {
     return GestureDetector(
       onTap: () => _openPlatformDetails(platform),
@@ -261,7 +321,8 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: ListView.builder(
               itemCount: filteredPlatforms.length,
-              itemBuilder: (context, index) => _buildPlatformCard(filteredPlatforms[index]),
+              // itemBuilder: (context, index) => _buildPlatformCard(filteredPlatforms[index]),
+              itemBuilder: (context, index) => _buildPlatformList(filteredPlatforms[index]),
             ),
           ),
         ],
