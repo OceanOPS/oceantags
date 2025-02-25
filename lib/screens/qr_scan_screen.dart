@@ -19,7 +19,6 @@ class _QRScanScreenState extends State<QRScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Scan QR Code")),
       body: Stack(
         children: [
           MobileScanner(
@@ -100,7 +99,7 @@ class QRScannerOverlay extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = Colors.black.withOpacity(0.7);
-    final cutoutSize = size.width * 0.6; // Square size is 60% of screen width
+    final cutoutSize = size.width * 0.7; // Square size is 60% of screen width
     final cutoutOffset = Offset(
       (size.width - cutoutSize) / 2, // Center horizontally
       (size.height - cutoutSize) / 3, // Position slightly above center
@@ -117,7 +116,7 @@ class QRScannerOverlay extends CustomPainter {
     final borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
+      ..strokeWidth = 2;
     canvas.drawRect(
       Rect.fromLTWH(cutoutOffset.dx, cutoutOffset.dy, cutoutSize, cutoutSize),
       borderPaint,

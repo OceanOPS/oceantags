@@ -244,7 +244,7 @@ String _getNetworkImage(String network) {
           height: _pulseController.value * 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            color: const Color.fromARGB(255, 208, 184, 235).withOpacity(0.3),
           ),
         );
       },
@@ -418,10 +418,10 @@ String _getNetworkImage(String network) {
                   child: ListView(
                     controller: scrollController,
                     children: [
-                      Align( 
+                      Align(
                         alignment: Alignment.center,
                         child: Container(
-                          width: 60, 
+                          width: 60,
                           height: 5,
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -429,14 +429,32 @@ String _getNetworkImage(String network) {
                           ),
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Center(
-                        child: Text(
-                          "Platform Details",
-                          style: Theme.of(context).textTheme.titleMedium,
+                      const SizedBox(height: 10),
+
+                      // 🔹 Title & Close Button Row
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Platform details",
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedPlatform = null; // ✅ Deselect platform
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       ),
+
                       Divider(color: Theme.of(context).colorScheme.primary),
+                      
                       _buildInfoRow("Reference", _selectedPlatform!.reference),
                       _buildInfoRow("Model", _selectedPlatform!.model),
                       _buildInfoRow("Network", _selectedPlatform!.network),
@@ -446,6 +464,7 @@ String _getNetworkImage(String network) {
                     ],
                   ),
                 ),
+
               ],
             ),
           ),
