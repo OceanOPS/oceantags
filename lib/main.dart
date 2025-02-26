@@ -88,6 +88,13 @@ class OceanTagsTheme extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) {
+        final textScaler = MediaQuery.textScalerOf(context);
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        );
+      },
       home: OceanTagsHome(
         database: database,
         toggleDarkMode: toggleDarkMode,
@@ -131,14 +138,20 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
         ),
         title: RichText(
           text: TextSpan(
-            style: TextStyle(
-              fontFamily: 'M3',
-              fontSize: 20.0,
-              color: colorScheme.onSurface,
-            ),
+            style: Theme.of(context).textTheme.titleLarge,
             children: [
-              TextSpan(text: 'Ocean', style: TextStyle(fontWeight: FontWeight.normal)),
-              TextSpan(text: 'Tags', style: TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                text: 'Ocean', 
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.normal
+                ),
+              ),
+              TextSpan(
+                text: 'Tags', 
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold
+                ),
+              ),
             ],
           ),
         ),

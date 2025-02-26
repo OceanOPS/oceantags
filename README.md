@@ -4,13 +4,17 @@ A new Flutter project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application that follows the
-[simple app state management
-tutorial](https://flutter.dev/to/state-management-sample).
+- clone the repository
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+git clone https://github.com/OceanOPS/oceantags.git
+```
+
+- install dependencies
+
+```bash
+flutter pub get
+```
 
 ## Assets
 
@@ -27,3 +31,7 @@ the `lib/src/localization` directory.
 
 To support additional languages, please visit the tutorial on
 [Internationalizing Flutter apps](https://flutter.dev/to/internationalization).
+
+## Accessibiliy
+
+Automatically scale text according to user preferences requiert to use `Theme.of(context).textTheme` each time the `style` attribut of a component need to be customised.
