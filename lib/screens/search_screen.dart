@@ -157,47 +157,51 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildPlatformList(PlatformEntity platform) {
     return Column(
       children: [
-        ListTile(
-          leading: Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  _getNetworkImage(platform.network),
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16), // ✅ Ajout du padding left/right
+          child: ListTile(
+            leading: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    _getNetworkImage(platform.network),
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
                 ),
+                _buildStatusBadge(platform.status),
+              ],
+            ),
+            title: Text(
+              platform.reference,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
               ),
-              _buildStatusBadge(platform.status),
-            ],
-          ),
-          title: Text(
-            platform.reference,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
             ),
-          ),
-          subtitle: Text(
-            platform.model,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            subtitle: Text(
+              platform.model,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-          trailing: GestureDetector(
-            onTap: () => _toggleFavorite(platform),
-            child: Icon(
-              platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: platform.isFavorite ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+            trailing: GestureDetector(
+              onTap: () => _toggleFavorite(platform),
+              child: Icon(
+                platform.isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: platform.isFavorite ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
+            onTap: () => _openPlatformDetails(platform),
           ),
-          onTap: () => _openPlatformDetails(platform),
         ),
         Divider(
           color: Theme.of(context).colorScheme.outlineVariant,
           thickness: 1,
           indent: 16,
           endIndent: 16,
+          height: 0,
         ),
       ],
     );
