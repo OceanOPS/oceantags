@@ -131,6 +131,29 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  Widget _buildStatusBadge(String status) {
+    return Positioned(
+      top: 2,
+      left: 2,
+      child: Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: _getStatusColor(status),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2), // Subtle shadow
+              blurRadius: 4, // Soft blur
+              spreadRadius: 2, // Extends the shadow
+              offset: Offset(0, 2), // Positioned slightly below
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPlatformList(PlatformEntity platform) {
     return Column(
       children: [
@@ -146,159 +169,37 @@ class _SearchScreenState extends State<SearchScreen> {
                   fit: BoxFit.cover,
                 ),
               ),
-              Positioned(
-                top: 2,
-                left: 2,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(platform.status),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ),
+              _buildStatusBadge(platform.status),
             ],
           ),
           title: Text(
             platform.reference,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontSize: 22,
-              fontWeight: FontWeight.w400,
-              color: Colors.black,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           subtitle: Text(
             platform.model,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontFamily: 'Roboto', 
-              fontSize: 12,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           trailing: GestureDetector(
             onTap: () => _toggleFavorite(platform),
             child: Icon(
               platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: platform.isFavorite ? Colors.red : Colors.grey,
+              color: platform.isFavorite ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           onTap: () => _openPlatformDetails(platform),
         ),
-        Divider(),
-      ],
-    );
-  }
-
-  Widget _buildPlatformCard(PlatformEntity platform) {
-    return GestureDetector(
-      onTap: () => _openPlatformDetails(platform),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        elevation: 4,
-        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  _getNetworkImage(platform.network),
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => _toggleFavorite(platform),
-                          child: Icon(
-                            platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: platform.isFavorite ? Colors.red : Colors.grey,
-                            size: 26,
-                          ),
-                        ),
-                        SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            platform.reference,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on, color: Colors.redAccent, size: 20),
-                        SizedBox(width: 6),
-                        Text("${platform.latitude};${platform.longitude}", style: TextStyle(fontSize: 14)),
-                      ],
-                    ),
-                    SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.wifi, color: Colors.blueAccent, size: 20),
-                        SizedBox(width: 6),
-                        Text(
-                          platform.network,
-                          style: TextStyle(fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.branding_watermark, color: Colors.orange, size: 20),
-                        SizedBox(width: 6),
-                        Text(
-                          platform.model,
-                          style: TextStyle(fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(height: 50),
-                  _buildStatusBadge(platform.status),
-                ],
-              ),
-            ],
-          ),
+        Divider(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          thickness: 1,
+          indent: 16,
+          endIndent: 16,
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _getStatusColor(status),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
+      ],
     );
   }
 
@@ -313,9 +214,11 @@ class _SearchScreenState extends State<SearchScreen> {
               controller: searchController,
               decoration: InputDecoration(
                 labelText: "Search...",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                suffixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(25)),
+                iconColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+              enabled: true,
             ),
           ),
           Expanded(
