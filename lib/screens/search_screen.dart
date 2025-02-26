@@ -218,13 +218,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(25)),
                 iconColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              enabled: true,
             ),
           ),
           Expanded(
             child: ListView.builder(
               itemCount: filteredPlatforms.length,
-              // itemBuilder: (context, index) => _buildPlatformCard(filteredPlatforms[index]),
               itemBuilder: (context, index) => _buildPlatformList(filteredPlatforms[index]),
             ),
           ),
