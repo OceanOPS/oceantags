@@ -297,7 +297,7 @@ void _deployPlatform() async {
       'oceangliders': 'assets/images/glider.png',
       'anibos': 'assets/images/anibos.png',
     };
-    return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
+    return networkImages[network.toLowerCase()] ?? 'assets/images/anibos.png';
   }
 
   /// 🔹 Toggle Favorite

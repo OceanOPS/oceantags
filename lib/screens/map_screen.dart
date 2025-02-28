@@ -197,7 +197,7 @@ String _getNetworkImage(String network) {
     'anibos': 'assets/images/anibos.png',
   };
 
-  return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
+  return networkImages[network.toLowerCase()] ?? 'assets/images/anibos.png';
 }
 
   List<Marker> _platformMarkers() {

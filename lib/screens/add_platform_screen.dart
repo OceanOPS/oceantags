@@ -170,6 +170,7 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                       network: networkController.text,
                                       model: modelController.text,
                                       isFavorite: false,
+                                      unsynced: true
                                     ),
                                   );
                                   print('********* platform added ***********');
