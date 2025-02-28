@@ -15,11 +15,27 @@ class AddPlatformScreen extends StatefulWidget {
 class AddPlatformScreenState extends State<AddPlatformScreen> {
   late AppDatabase _db;
   final _formKey = GlobalKey<FormState>();
+  final referenceController = TextEditingController();
+  final latitudeController = TextEditingController();
+  final longitudeController = TextEditingController();
+  final networkController = TextEditingController();
+  final modelController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _db = widget.database;
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    referenceController.dispose();
+    latitudeController.dispose();
+    longitudeController.dispose();
+    networkController.dispose();
+    modelController.dispose();
+    super.dispose();
   }
 
   void addPlatform(PlatformEntity platform) async {
@@ -68,6 +84,7 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Name',
                               ),
+                              controller: referenceController,
                               // The validator receives the text that the user has entered.
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -75,6 +92,30 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                 }
                                 return null;
                               },
+                            ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Latitude',
+                              ),
+                              controller: latitudeController,
+                            ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Longitude',
+                              ),
+                              controller: longitudeController,
+                            ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Model',
+                              ),
+                              controller: modelController,
+                            ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Network',
+                              ),
+                              controller: networkController,
                             ),
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
@@ -95,17 +136,18 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                     const SnackBar(content: Text('Processing Data')),
                                   );
                                   _db.insertPlatform(
-                                    const PlatformEntity(
-                                      reference: 'Test',
-                                      latitude: -6.5,
-                                      longitude: 113.4,
+                                    PlatformEntity(
+                                      reference: referenceController.text,
+                                      latitude: double.tryParse(latitudeController.text) ?? 00.00,
+                                      longitude: double.tryParse(longitudeController.text) ?? 00.00,
                                       status: 'inactive',
-                                      network: 'sot',
-                                      model: 'Generic Manual',
+                                      network: networkController.text,
+                                      model: modelController.text,
                                       isFavorite: false,
                                     ),
                                   );
-                                  print('platform added');
+                                  print('********* platform added ***********');
+                                  print(referenceController.text);
                                 }
                               },
                             ),// Add TextFormFields and ElevatedButton here.
