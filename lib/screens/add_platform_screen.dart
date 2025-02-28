@@ -144,49 +144,6 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                 );
                               }).toList(),
                             ),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: colorScheme.primary,
-                                    foregroundColor: colorScheme.onPrimary,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  icon: Icon(
-                                      Icons.save,
-                                      color: Theme.of(context).colorScheme.onPrimary
-                                  ),
-                                  label: Text("Save"),
-                                  onPressed: () async {
-                                    // Validate returns true if the form is valid, or false otherwise.
-                                    if (_formKey.currentState!.validate()) {
-                                      // If the form is valid, display a snackbar. In the real world,
-                                      // you'd often call a server or save the information in a database.
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Adding platform')),
-                                      );
-                                      final reference = referenceController.text;
-                                      _db.insertPlatform(
-                                        PlatformEntity(
-                                          reference: reference,
-                                          latitude: double.tryParse(latitudeController.text) ?? 00.00,
-                                          longitude: double.tryParse(longitudeController.text) ?? 00.00,
-                                          status: _selectedStatusOption!,
-                                          network: networkController.text,
-                                          model: modelController.text,
-                                          isFavorite: false,
-                                        ),
-                                      );
-                                      final platform = await widget.database.getPlatformByReference(reference);
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform!)),
-                                      );
-                                    }
-                                  },
-                                ),                                                         ),
                           ],
                         ),
                       ),
@@ -197,6 +154,39 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          // Validate returns true if the form is valid, or false otherwise.
+          if (_formKey.currentState!.validate()) {
+            // If the form is valid, display a snackbar. In the real world,
+            // you'd often call a server or save the information in a database.
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Adding platform')),
+            );
+            final reference = referenceController.text;
+            _db.insertPlatform(
+              PlatformEntity(
+                reference: reference,
+                latitude: double.tryParse(latitudeController.text) ?? 00.00,
+                longitude: double.tryParse(longitudeController.text) ?? 00.00,
+                status: _selectedStatusOption!,
+                network: networkController.text,
+                model: modelController.text,
+                isFavorite: false,
+              ),
+            );
+            final platform = await widget.database.getPlatformByReference(reference);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform!)),
+            );
+          }
+        },
+        label: Text("Save"),
+        icon: Icon(Icons.save),
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.primary,
       ),
     );
   }
