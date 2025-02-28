@@ -11,8 +11,9 @@ import '../database/db.dart';
 
 class MapScreen extends StatefulWidget {
   final AppDatabase database; 
+  final List<PlatformEntity> platforms;
 
-  const MapScreen({Key? key, required this.database}) : super(key: key);
+  const MapScreen({Key? key, required this.database, required this.platforms}) : super(key: key);
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -21,8 +22,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   LatLng? _currentLocation;
   bool _isLocationLoaded = false;
-  bool _isBoxInitialized = false;
-  List<PlatformEntity> _platforms = [];
+  late List<PlatformEntity> _platforms;
   bool _downloading = false;
   double _downloadProgress = 0.0;
   String _downloadMessage = "";
@@ -43,7 +43,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _mapController = MapController();
-    _initializePlatformData();
+    _platforms = widget.platforms;
     _getCurrentLocation();
 
     // ✅ Listen to zoom changes
@@ -62,49 +62,50 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     )..repeat(reverse: true);
   }
 
-  Future<void> _initializePlatformData() async {
-    try {
-      final platforms = await widget.database.getAllPlatforms(); // ✅ Fetch from Drift
-      setState(() {
-        _platforms = platforms; // ✅ Store fetched platforms
-        _isBoxInitialized = true; // ✅ Mark as initialized
-      });
-    } catch (e) {
-      print("❌ Error initializing platform data: $e");
+Future<void> _getCurrentLocation() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // ✅ Ensure Location Services Are Enabled
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    print("⚠️ Location services are disabled.");
+    await Geolocator.openLocationSettings();
+    return;
+  }
+
+  // ✅ Request Permission
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      print("❌ Location permission denied.");
+      return;
     }
   }
 
+  if (permission == LocationPermission.deniedForever) {
+    print("❌ Location permission permanently denied.");
+    return;
+  }
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  // ✅ Fetch Location
+  try {
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.best,
+    );
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
-      return;
-    }
+    print("📍 Location Found: ${position.latitude}, ${position.longitude}");
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return;
-    }
-
-    final position = await Geolocator.getCurrentPosition();
-    
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
       _isLocationLoaded = true;
     });
 
+  } catch (e) {
+    print("❌ Error getting location: $e");
   }
+}
 
   /// ✅ Assign different colors based on status
   Color _getPlatformColor(String status) {
@@ -309,6 +310,10 @@ String _getNetworkImage(String network) {
       model: "GPS",
       network: "Self",
       isFavorite: false,
+      deploymentDate: DateTime.now(), // ✅ Set current time as deployment date
+      deploymentLatitude: _currentLocation!.latitude,
+      deploymentLongitude: _currentLocation!.longitude,
+      unsynced: true, // ✅ Mark as unsynced since it's a new deployment
     );
   }
 
@@ -629,7 +634,7 @@ String _getNetworkImage(String network) {
     return Scaffold(
       body: Stack(
         children: [
-          (!_isLocationLoaded || !_isBoxInitialized)
+          (!_isLocationLoaded)
               ? Center(child: CircularProgressIndicator())
               : FlutterMap(
                   mapController: _mapController,

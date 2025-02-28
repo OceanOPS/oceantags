@@ -51,6 +51,7 @@ class _OceanTagsAppState extends State<OceanTagsApp> {
       database: widget.database,
     );
   }
+  
 }
 
 class OceanTagsTheme extends StatelessWidget {
@@ -88,6 +89,13 @@ class OceanTagsTheme extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) {
+        final textScaler = MediaQuery.textScalerOf(context);
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        );
+      },
       home: OceanTagsHome(
         database: database,
         toggleDarkMode: toggleDarkMode,
@@ -112,11 +120,53 @@ class OceanTagsHome extends StatefulWidget {
 
 class _OceanTagsHomeState extends State<OceanTagsHome> {
   int _selectedIndex = 0;
+  bool _isLoading = true; // ✅ Track loading state
+  List<PlatformEntity> _platforms = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePlatformData(); // ✅ Fetch data on first launch
+  }
+
+  Future<void> _initializePlatformData() async {
+    try {
+      print("🔄 Fetching platforms...");
+      await widget.database.fetchAndStorePlatforms(); // ✅ Fetch from API & store in DB
+      final platforms = await widget.database.getAllPlatforms(); // ✅ Load from DB
+
+      if (platforms.isEmpty) {
+        print("⚠️ No platforms found in the database.");
+      } else {
+        print("✅ Platforms loaded: ${platforms.length}");
+      }
+
+      setState(() {
+        _platforms = platforms;
+        _isLoading = false; // ✅ Mark as loaded
+      });
+    } catch (e) {
+      print("❌ Error initializing platform data: $e");
+      setState(() {
+        _isLoading = false; // ✅ Avoid infinite loading
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // ✅ Show Loading Indicator Until Platforms Are Fetched
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(), // 🔄 Loading indicator
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -131,14 +181,20 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
         ),
         title: RichText(
           text: TextSpan(
-            style: TextStyle(
-              fontFamily: 'M3',
-              fontSize: 20.0,
-              color: colorScheme.onSurface,
-            ),
+            style: Theme.of(context).textTheme.titleLarge,
             children: [
-              TextSpan(text: 'Ocean', style: TextStyle(fontWeight: FontWeight.normal)),
-              TextSpan(text: 'Tags', style: TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                text: 'Ocean', 
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.normal
+                ),
+              ),
+              TextSpan(
+                text: 'Tags', 
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold
+                ),
+              ),
             ],
           ),
         ),
@@ -174,7 +230,7 @@ class _OceanTagsHomeState extends State<OceanTagsHome> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          MapScreen(database: widget.database),
+          MapScreen(database: widget.database, platforms: _platforms), // ✅ Pass platforms
           SearchScreen(database: widget.database), 
           QRScanScreen(database: widget.database),
         ],
