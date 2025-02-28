@@ -119,7 +119,7 @@ class _SearchScreenState extends State<SearchScreen> {
       'oceangliders': 'assets/images/glider.png',
       'anibos': 'assets/images/anibos.png',
     };
-    return networkImages[network.toLowerCase()] ?? 'assets/images/default.png';
+    return networkImages[network.toLowerCase()] ?? 'assets/images/anibos.png';
   }
 
   Color _getStatusColor(String status) {
