@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/db.dart';
+import 'platform_detail_screen.dart';
 
 class AddPlatformScreen extends StatefulWidget {
   final AppDatabase database;
@@ -153,17 +154,18 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                               ),
                               icon: Icon(Icons.save),
                               label: Text("Save"),
-                              onPressed: () {
+                              onPressed: () async {
                                 // Validate returns true if the form is valid, or false otherwise.
                                 if (_formKey.currentState!.validate()) {
                                   // If the form is valid, display a snackbar. In the real world,
                                   // you'd often call a server or save the information in a database.
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Processing Data')),
+                                    const SnackBar(content: Text('Adding platform')),
                                   );
+                                  final reference = referenceController.text;
                                   _db.insertPlatform(
                                     PlatformEntity(
-                                      reference: referenceController.text,
+                                      reference: reference,
                                       latitude: double.tryParse(latitudeController.text) ?? 00.00,
                                       longitude: double.tryParse(longitudeController.text) ?? 00.00,
                                       status: _selectedStatusOption!,
@@ -172,8 +174,11 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                       isFavorite: false,
                                     ),
                                   );
-                                  print('********* platform added ***********');
-                                  print(referenceController.text);
+                                  final platform = await widget.database.getPlatformByReference(reference);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform!)),
+                                  );
                                 }
                               },
                             ),// Add TextFormFields and ElevatedButton here.

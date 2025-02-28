@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:oceantags/screens/add_platform_screen.dart';
+import 'add_platform_screen.dart';
 import 'dart:convert';
 import '../database/db.dart';
 import 'platform_detail_screen.dart';
