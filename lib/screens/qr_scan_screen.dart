@@ -70,7 +70,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
     if (platform != null) {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform)),
+        MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform, database: widget.database)),
       );
     } else {
       _showMessage(context, "Platform not found");

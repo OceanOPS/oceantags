@@ -25,54 +25,7 @@ class _SearchScreenState extends State<SearchScreen> {
     super.initState();
     _db = widget.database;
     searchController.addListener(_filterPlatforms);
-    _fetchPlatformData();
     _filterPlatforms();
-  }
-
-  Future<void> _fetchPlatformData() async {
-    setState(() {
-      _isFetching = true;
-      _errorMessage = '';
-    });
-
-    try {
-      String formattedDate = DateTime.now().toUtc().subtract(Duration(days: 180)).toString().split('.')[0];
-
-      Uri apiUrl = Uri.parse("https://www.ocean-ops.org/api/1/data/platform/").replace(
-        queryParameters: {
-          "exp": jsonEncode(["ptfStatus.name in ('INACTIVE','CLOSED','OPERATIONAL') and latestObs.obsDate>'$formattedDate'"]),
-          "include": jsonEncode(["ref", "latestObs.lat", "latestObs.lon", "latestObs.obsDate","ptfStatus.name", "ptfDepl.deplDate", "ptfModel.name", "ptfModel.network.name"])
-        },
-      );
-
-      final response = await http.get(apiUrl);
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
-        List<dynamic> platformsData = jsonResponse['data'];
-
-        await _db.clearPlatforms(); // ✅ Clear old data before inserting
-
-        for (var platformJson in platformsData) {
-          var platform = platformFromJson(platformJson);
-          await _db.insertPlatform(platform);
-        }
-
-        setState(() {
-          _isFetching = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load data (Status ${response.statusCode})';
-          _isFetching = false;
-        });
-      }
-    } catch (error) {
-      setState(() {
-        _errorMessage = 'Error fetching data: $error';
-        _isFetching = false;
-      });
-    }
   }
 
   void _filterPlatforms() async {
@@ -84,12 +37,19 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  void _openPlatformDetails(PlatformEntity platform) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform)),
-    );
-  }
+void _openPlatformDetails(PlatformEntity platform) async {
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PlatformDetailScreen(
+        platform: platform, 
+        database: widget.database,
+        onPlatformUpdated: _filterPlatforms, // ✅ Pass the refresh function
+      ),
+    ),
+  );
+}
+
 
   void _toggleFavorite(PlatformEntity platform) async {
     final updatedPlatform = platform.copyWith(isFavorite: !platform.isFavorite);

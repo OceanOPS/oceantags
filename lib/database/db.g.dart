@@ -53,9 +53,48 @@ class $PlatformsTable extends Platforms
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_favorite" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _deploymentDateMeta =
+      const VerificationMeta('deploymentDate');
   @override
-  List<GeneratedColumn> get $columns =>
-      [reference, latitude, longitude, status, model, network, isFavorite];
+  late final GeneratedColumn<DateTime> deploymentDate =
+      GeneratedColumn<DateTime>('deployment_date', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _deploymentLatitudeMeta =
+      const VerificationMeta('deploymentLatitude');
+  @override
+  late final GeneratedColumn<double> deploymentLatitude =
+      GeneratedColumn<double>('deployment_latitude', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _deploymentLongitudeMeta =
+      const VerificationMeta('deploymentLongitude');
+  @override
+  late final GeneratedColumn<double> deploymentLongitude =
+      GeneratedColumn<double>('deployment_longitude', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _unsyncedMeta =
+      const VerificationMeta('unsynced');
+  @override
+  late final GeneratedColumn<bool> unsynced = GeneratedColumn<bool>(
+      'unsynced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("unsynced" IN (0, 1))'),
+      defaultValue: Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        reference,
+        latitude,
+        longitude,
+        status,
+        model,
+        network,
+        isFavorite,
+        deploymentDate,
+        deploymentLatitude,
+        deploymentLongitude,
+        unsynced
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -108,6 +147,28 @@ class $PlatformsTable extends Platforms
           isFavorite.isAcceptableOrUnknown(
               data['is_favorite']!, _isFavoriteMeta));
     }
+    if (data.containsKey('deployment_date')) {
+      context.handle(
+          _deploymentDateMeta,
+          deploymentDate.isAcceptableOrUnknown(
+              data['deployment_date']!, _deploymentDateMeta));
+    }
+    if (data.containsKey('deployment_latitude')) {
+      context.handle(
+          _deploymentLatitudeMeta,
+          deploymentLatitude.isAcceptableOrUnknown(
+              data['deployment_latitude']!, _deploymentLatitudeMeta));
+    }
+    if (data.containsKey('deployment_longitude')) {
+      context.handle(
+          _deploymentLongitudeMeta,
+          deploymentLongitude.isAcceptableOrUnknown(
+              data['deployment_longitude']!, _deploymentLongitudeMeta));
+    }
+    if (data.containsKey('unsynced')) {
+      context.handle(_unsyncedMeta,
+          unsynced.isAcceptableOrUnknown(data['unsynced']!, _unsyncedMeta));
+    }
     return context;
   }
 
@@ -131,6 +192,14 @@ class $PlatformsTable extends Platforms
           .read(DriftSqlType.string, data['${effectivePrefix}network'])!,
       isFavorite: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_favorite'])!,
+      deploymentDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}deployment_date']),
+      deploymentLatitude: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}deployment_latitude']),
+      deploymentLongitude: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}deployment_longitude']),
+      unsynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}unsynced'])!,
     );
   }
 
@@ -148,6 +217,10 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
   final String model;
   final String network;
   final bool isFavorite;
+  final DateTime? deploymentDate;
+  final double? deploymentLatitude;
+  final double? deploymentLongitude;
+  final bool unsynced;
   const PlatformEntity(
       {required this.reference,
       required this.latitude,
@@ -155,7 +228,11 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
       required this.status,
       required this.model,
       required this.network,
-      required this.isFavorite});
+      required this.isFavorite,
+      this.deploymentDate,
+      this.deploymentLatitude,
+      this.deploymentLongitude,
+      required this.unsynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -166,6 +243,16 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
     map['model'] = Variable<String>(model);
     map['network'] = Variable<String>(network);
     map['is_favorite'] = Variable<bool>(isFavorite);
+    if (!nullToAbsent || deploymentDate != null) {
+      map['deployment_date'] = Variable<DateTime>(deploymentDate);
+    }
+    if (!nullToAbsent || deploymentLatitude != null) {
+      map['deployment_latitude'] = Variable<double>(deploymentLatitude);
+    }
+    if (!nullToAbsent || deploymentLongitude != null) {
+      map['deployment_longitude'] = Variable<double>(deploymentLongitude);
+    }
+    map['unsynced'] = Variable<bool>(unsynced);
     return map;
   }
 
@@ -178,6 +265,16 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
       model: Value(model),
       network: Value(network),
       isFavorite: Value(isFavorite),
+      deploymentDate: deploymentDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deploymentDate),
+      deploymentLatitude: deploymentLatitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deploymentLatitude),
+      deploymentLongitude: deploymentLongitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deploymentLongitude),
+      unsynced: Value(unsynced),
     );
   }
 
@@ -192,6 +289,12 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
       model: serializer.fromJson<String>(json['model']),
       network: serializer.fromJson<String>(json['network']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
+      deploymentDate: serializer.fromJson<DateTime?>(json['deploymentDate']),
+      deploymentLatitude:
+          serializer.fromJson<double?>(json['deploymentLatitude']),
+      deploymentLongitude:
+          serializer.fromJson<double?>(json['deploymentLongitude']),
+      unsynced: serializer.fromJson<bool>(json['unsynced']),
     );
   }
   @override
@@ -205,6 +308,10 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
       'model': serializer.toJson<String>(model),
       'network': serializer.toJson<String>(network),
       'isFavorite': serializer.toJson<bool>(isFavorite),
+      'deploymentDate': serializer.toJson<DateTime?>(deploymentDate),
+      'deploymentLatitude': serializer.toJson<double?>(deploymentLatitude),
+      'deploymentLongitude': serializer.toJson<double?>(deploymentLongitude),
+      'unsynced': serializer.toJson<bool>(unsynced),
     };
   }
 
@@ -215,7 +322,11 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
           String? status,
           String? model,
           String? network,
-          bool? isFavorite}) =>
+          bool? isFavorite,
+          Value<DateTime?> deploymentDate = const Value.absent(),
+          Value<double?> deploymentLatitude = const Value.absent(),
+          Value<double?> deploymentLongitude = const Value.absent(),
+          bool? unsynced}) =>
       PlatformEntity(
         reference: reference ?? this.reference,
         latitude: latitude ?? this.latitude,
@@ -224,6 +335,15 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
         model: model ?? this.model,
         network: network ?? this.network,
         isFavorite: isFavorite ?? this.isFavorite,
+        deploymentDate:
+            deploymentDate.present ? deploymentDate.value : this.deploymentDate,
+        deploymentLatitude: deploymentLatitude.present
+            ? deploymentLatitude.value
+            : this.deploymentLatitude,
+        deploymentLongitude: deploymentLongitude.present
+            ? deploymentLongitude.value
+            : this.deploymentLongitude,
+        unsynced: unsynced ?? this.unsynced,
       );
   PlatformEntity copyWithCompanion(PlatformsCompanion data) {
     return PlatformEntity(
@@ -235,6 +355,16 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
       network: data.network.present ? data.network.value : this.network,
       isFavorite:
           data.isFavorite.present ? data.isFavorite.value : this.isFavorite,
+      deploymentDate: data.deploymentDate.present
+          ? data.deploymentDate.value
+          : this.deploymentDate,
+      deploymentLatitude: data.deploymentLatitude.present
+          ? data.deploymentLatitude.value
+          : this.deploymentLatitude,
+      deploymentLongitude: data.deploymentLongitude.present
+          ? data.deploymentLongitude.value
+          : this.deploymentLongitude,
+      unsynced: data.unsynced.present ? data.unsynced.value : this.unsynced,
     );
   }
 
@@ -247,14 +377,28 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
           ..write('status: $status, ')
           ..write('model: $model, ')
           ..write('network: $network, ')
-          ..write('isFavorite: $isFavorite')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('deploymentDate: $deploymentDate, ')
+          ..write('deploymentLatitude: $deploymentLatitude, ')
+          ..write('deploymentLongitude: $deploymentLongitude, ')
+          ..write('unsynced: $unsynced')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
-      reference, latitude, longitude, status, model, network, isFavorite);
+      reference,
+      latitude,
+      longitude,
+      status,
+      model,
+      network,
+      isFavorite,
+      deploymentDate,
+      deploymentLatitude,
+      deploymentLongitude,
+      unsynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -265,7 +409,11 @@ class PlatformEntity extends DataClass implements Insertable<PlatformEntity> {
           other.status == this.status &&
           other.model == this.model &&
           other.network == this.network &&
-          other.isFavorite == this.isFavorite);
+          other.isFavorite == this.isFavorite &&
+          other.deploymentDate == this.deploymentDate &&
+          other.deploymentLatitude == this.deploymentLatitude &&
+          other.deploymentLongitude == this.deploymentLongitude &&
+          other.unsynced == this.unsynced);
 }
 
 class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
@@ -276,6 +424,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
   final Value<String> model;
   final Value<String> network;
   final Value<bool> isFavorite;
+  final Value<DateTime?> deploymentDate;
+  final Value<double?> deploymentLatitude;
+  final Value<double?> deploymentLongitude;
+  final Value<bool> unsynced;
   final Value<int> rowid;
   const PlatformsCompanion({
     this.reference = const Value.absent(),
@@ -285,6 +437,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
     this.model = const Value.absent(),
     this.network = const Value.absent(),
     this.isFavorite = const Value.absent(),
+    this.deploymentDate = const Value.absent(),
+    this.deploymentLatitude = const Value.absent(),
+    this.deploymentLongitude = const Value.absent(),
+    this.unsynced = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlatformsCompanion.insert({
@@ -295,6 +451,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
     required String model,
     required String network,
     this.isFavorite = const Value.absent(),
+    this.deploymentDate = const Value.absent(),
+    this.deploymentLatitude = const Value.absent(),
+    this.deploymentLongitude = const Value.absent(),
+    this.unsynced = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : reference = Value(reference),
         latitude = Value(latitude),
@@ -310,6 +470,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
     Expression<String>? model,
     Expression<String>? network,
     Expression<bool>? isFavorite,
+    Expression<DateTime>? deploymentDate,
+    Expression<double>? deploymentLatitude,
+    Expression<double>? deploymentLongitude,
+    Expression<bool>? unsynced,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -320,6 +484,11 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
       if (model != null) 'model': model,
       if (network != null) 'network': network,
       if (isFavorite != null) 'is_favorite': isFavorite,
+      if (deploymentDate != null) 'deployment_date': deploymentDate,
+      if (deploymentLatitude != null) 'deployment_latitude': deploymentLatitude,
+      if (deploymentLongitude != null)
+        'deployment_longitude': deploymentLongitude,
+      if (unsynced != null) 'unsynced': unsynced,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -332,6 +501,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
       Value<String>? model,
       Value<String>? network,
       Value<bool>? isFavorite,
+      Value<DateTime?>? deploymentDate,
+      Value<double?>? deploymentLatitude,
+      Value<double?>? deploymentLongitude,
+      Value<bool>? unsynced,
       Value<int>? rowid}) {
     return PlatformsCompanion(
       reference: reference ?? this.reference,
@@ -341,6 +514,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
       model: model ?? this.model,
       network: network ?? this.network,
       isFavorite: isFavorite ?? this.isFavorite,
+      deploymentDate: deploymentDate ?? this.deploymentDate,
+      deploymentLatitude: deploymentLatitude ?? this.deploymentLatitude,
+      deploymentLongitude: deploymentLongitude ?? this.deploymentLongitude,
+      unsynced: unsynced ?? this.unsynced,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -369,6 +546,18 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
     }
+    if (deploymentDate.present) {
+      map['deployment_date'] = Variable<DateTime>(deploymentDate.value);
+    }
+    if (deploymentLatitude.present) {
+      map['deployment_latitude'] = Variable<double>(deploymentLatitude.value);
+    }
+    if (deploymentLongitude.present) {
+      map['deployment_longitude'] = Variable<double>(deploymentLongitude.value);
+    }
+    if (unsynced.present) {
+      map['unsynced'] = Variable<bool>(unsynced.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -385,6 +574,10 @@ class PlatformsCompanion extends UpdateCompanion<PlatformEntity> {
           ..write('model: $model, ')
           ..write('network: $network, ')
           ..write('isFavorite: $isFavorite, ')
+          ..write('deploymentDate: $deploymentDate, ')
+          ..write('deploymentLatitude: $deploymentLatitude, ')
+          ..write('deploymentLongitude: $deploymentLongitude, ')
+          ..write('unsynced: $unsynced, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -410,6 +603,10 @@ typedef $$PlatformsTableCreateCompanionBuilder = PlatformsCompanion Function({
   required String model,
   required String network,
   Value<bool> isFavorite,
+  Value<DateTime?> deploymentDate,
+  Value<double?> deploymentLatitude,
+  Value<double?> deploymentLongitude,
+  Value<bool> unsynced,
   Value<int> rowid,
 });
 typedef $$PlatformsTableUpdateCompanionBuilder = PlatformsCompanion Function({
@@ -420,6 +617,10 @@ typedef $$PlatformsTableUpdateCompanionBuilder = PlatformsCompanion Function({
   Value<String> model,
   Value<String> network,
   Value<bool> isFavorite,
+  Value<DateTime?> deploymentDate,
+  Value<double?> deploymentLatitude,
+  Value<double?> deploymentLongitude,
+  Value<bool> unsynced,
   Value<int> rowid,
 });
 
@@ -452,6 +653,21 @@ class $$PlatformsTableFilterComposer
 
   ColumnFilters<bool> get isFavorite => $composableBuilder(
       column: $table.isFavorite, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deploymentDate => $composableBuilder(
+      column: $table.deploymentDate,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get deploymentLatitude => $composableBuilder(
+      column: $table.deploymentLatitude,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get deploymentLongitude => $composableBuilder(
+      column: $table.deploymentLongitude,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get unsynced => $composableBuilder(
+      column: $table.unsynced, builder: (column) => ColumnFilters(column));
 }
 
 class $$PlatformsTableOrderingComposer
@@ -483,6 +699,21 @@ class $$PlatformsTableOrderingComposer
 
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
       column: $table.isFavorite, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deploymentDate => $composableBuilder(
+      column: $table.deploymentDate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get deploymentLatitude => $composableBuilder(
+      column: $table.deploymentLatitude,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get deploymentLongitude => $composableBuilder(
+      column: $table.deploymentLongitude,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get unsynced => $composableBuilder(
+      column: $table.unsynced, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlatformsTableAnnotationComposer
@@ -514,6 +745,18 @@ class $$PlatformsTableAnnotationComposer
 
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
       column: $table.isFavorite, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deploymentDate => $composableBuilder(
+      column: $table.deploymentDate, builder: (column) => column);
+
+  GeneratedColumn<double> get deploymentLatitude => $composableBuilder(
+      column: $table.deploymentLatitude, builder: (column) => column);
+
+  GeneratedColumn<double> get deploymentLongitude => $composableBuilder(
+      column: $table.deploymentLongitude, builder: (column) => column);
+
+  GeneratedColumn<bool> get unsynced =>
+      $composableBuilder(column: $table.unsynced, builder: (column) => column);
 }
 
 class $$PlatformsTableTableManager extends RootTableManager<
@@ -549,6 +792,10 @@ class $$PlatformsTableTableManager extends RootTableManager<
             Value<String> model = const Value.absent(),
             Value<String> network = const Value.absent(),
             Value<bool> isFavorite = const Value.absent(),
+            Value<DateTime?> deploymentDate = const Value.absent(),
+            Value<double?> deploymentLatitude = const Value.absent(),
+            Value<double?> deploymentLongitude = const Value.absent(),
+            Value<bool> unsynced = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PlatformsCompanion(
@@ -559,6 +806,10 @@ class $$PlatformsTableTableManager extends RootTableManager<
             model: model,
             network: network,
             isFavorite: isFavorite,
+            deploymentDate: deploymentDate,
+            deploymentLatitude: deploymentLatitude,
+            deploymentLongitude: deploymentLongitude,
+            unsynced: unsynced,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -569,6 +820,10 @@ class $$PlatformsTableTableManager extends RootTableManager<
             required String model,
             required String network,
             Value<bool> isFavorite = const Value.absent(),
+            Value<DateTime?> deploymentDate = const Value.absent(),
+            Value<double?> deploymentLatitude = const Value.absent(),
+            Value<double?> deploymentLongitude = const Value.absent(),
+            Value<bool> unsynced = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PlatformsCompanion.insert(
@@ -579,6 +834,10 @@ class $$PlatformsTableTableManager extends RootTableManager<
             model: model,
             network: network,
             isFavorite: isFavorite,
+            deploymentDate: deploymentDate,
+            deploymentLatitude: deploymentLatitude,
+            deploymentLongitude: deploymentLongitude,
+            unsynced: unsynced,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
