@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:oceantags/screens/add_platform_screen.dart';
 import 'dart:convert';
 import '../database/db.dart';
 import 'platform_detail_screen.dart';
@@ -88,6 +89,13 @@ class _SearchScreenState extends State<SearchScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PlatformDetailScreen(platform: platform)),
+    );
+  }
+
+  void _addPlatform() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddPlatformScreen()),
     );
   }
 
@@ -222,6 +230,26 @@ class _SearchScreenState extends State<SearchScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(25)),
                 iconColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16), // ✅ Ajout du padding left/right
+            child: ListTile(
+              leading: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Icon(Icons.add),
+                  ),
+                ],
+              ),
+              title: Text(
+                "Add platform",
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              onTap: () => _addPlatform(),
             ),
           ),
           Expanded(
