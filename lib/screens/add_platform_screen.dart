@@ -20,6 +20,8 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
   final longitudeController = TextEditingController();
   final networkController = TextEditingController();
   final modelController = TextEditingController();
+  List<String> _statusOptions = ["OPERATIONAL", "INACTIVE", "PROBABLE", "REGISTERED", "CONFIRMED"];
+  String? _selectedStatusOption;
 
   @override
   void initState() {
@@ -117,6 +119,30 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                               ),
                               controller: networkController,
                             ),
+                            DropdownButtonFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Status',
+                              ),
+                              hint: Text('Select status'),
+                              value: _selectedStatusOption,
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _selectedStatusOption = newValue;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a status';
+                                }
+                                return null;
+                              },
+                              items: _statusOptions.map((option) {
+                                return DropdownMenuItem(
+                                  child: new Text(option),
+                                  value: option,
+                                );
+                              }).toList(),
+                            ),
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorScheme.primary,
@@ -140,7 +166,7 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                       reference: referenceController.text,
                                       latitude: double.tryParse(latitudeController.text) ?? 00.00,
                                       longitude: double.tryParse(longitudeController.text) ?? 00.00,
-                                      status: 'inactive',
+                                      status: _selectedStatusOption!,
                                       network: networkController.text,
                                       model: modelController.text,
                                       isFavorite: false,
