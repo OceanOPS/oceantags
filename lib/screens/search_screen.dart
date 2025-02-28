@@ -95,7 +95,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _addPlatform() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => AddPlatformScreen()),
+      MaterialPageRoute(builder: (context) => AddPlatformScreen(database: _db)),
     );
   }
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import '../database/db.dart';
 
 class AddPlatformScreen extends StatefulWidget {
-  const AddPlatformScreen({Key? key}) : super(key: key);
+  final AppDatabase database;
+
+  const AddPlatformScreen({Key? key, required this.database}) : super(key: key);
 
   @override
   AddPlatformScreenState createState() {
@@ -13,7 +13,18 @@ class AddPlatformScreen extends StatefulWidget {
 }
 
 class AddPlatformScreenState extends State<AddPlatformScreen> {
+  late AppDatabase _db;
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _db = widget.database;
+  }
+
+  void addPlatform(PlatformEntity platform) async {
+    await _db.insertPlatform(platform);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +94,18 @@ class AddPlatformScreenState extends State<AddPlatformScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('Processing Data')),
                                   );
+                                  _db.insertPlatform(
+                                    const PlatformEntity(
+                                      reference: 'Test',
+                                      latitude: -6.5,
+                                      longitude: 113.4,
+                                      status: 'inactive',
+                                      network: 'sot',
+                                      model: 'Generic Manual',
+                                      isFavorite: false,
+                                    ),
+                                  );
+                                  print('platform added');
                                 }
                               },
                             ),// Add TextFormFields and ElevatedButton here.
