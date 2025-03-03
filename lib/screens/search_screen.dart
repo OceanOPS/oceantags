@@ -198,7 +198,7 @@ class _SearchScreenState extends State<SearchScreen> {
               onTap: () => _toggleFavorite(platform),
               child: Icon(
                 platform.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: platform.isFavorite ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             onTap: () => _openPlatformDetails(platform),
